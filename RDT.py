@@ -93,6 +93,11 @@ class RDT:
     def add_packets(self,Packet: Packet):
         self.packets.append(Packet)
     
+    def send_packets(self,Packets):
+        for i in range(0,len(Packets)-1):
+            self.network.udt_send(Packets[i].get_byte_S())
+            
+     
     def remove_packets(self,Packet: Packet):
         self.packets.remove(Packet)
         
@@ -186,17 +191,22 @@ class RDT:
             # if this was the last packet, will return on the next iteration
         return ret_S
     
-    def rdt_4_0_send(self, msg_S,Packets):
-        p = Packet(self.seq_num, msg_S)
+    def rdt_4_0_send(self, messages):
+        packets = []
+        packets_n_time = {}
+        
+        for msg_S in messages:
+            packets.append(Packet(self.seq_num,msg_S))
+            
         current_seq = self.seq_num
-        
-        for i in range(0,len(Packets)-1):
-            self.add_packets(self,Packets[i])
-        
+           
         while current_seq == self.seq_num:
-            self.network.udt_send(p.get_byte_S())
+            for i in range(0,len(packets)-1):
+                self.network.udt_send(packets[i].get_byte_S())
+                packets_n_time[packets[i]] = time.time()
+            
             response = ''
-            timer = time.time()
+            #timer = time.time()
 
             # Waiting for ack/nak
             while response == '' and timer + self.timeout > time.time():

@@ -69,13 +69,14 @@ if __name__ == '__main2__':
         'The art of debugging is figuring out what you really told your program to do rather than what you thought you told it to do. -- Andrew Singer',
         'The computer was born to solve problems that did not exist before. - Bill Gates']
     
+    messages = [msg_L,msg_L2]
     timeout = 1000  # send the next message if not response
     time_of_last_data = time.time()
     rdt = RDT.RDT('client', args.server, args.port)
     try:
-        for msg_S in msg_L:
-            print('Client asking to change case: ' + msg_S)
-            rdt.rdt_4_0_send(msg_S)
+        for message in messages:
+            print('Client asking to change case: ' + message)
+            rdt.rdt_4_0_send(message)
 
             # try to receive message before timeout
             msg_S = None

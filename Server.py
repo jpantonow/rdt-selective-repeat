@@ -43,6 +43,7 @@ if __name__ == '__main__':
 if __name__ == '__main2__':
     parser = argparse.ArgumentParser(description='UPPER CASE server.')
     parser.add_argument('port', help='Port.', type=int)
+    parser.add_argument('window_size', help = 'Window Size.', type = int)
     args = parser.parse_args()
 
     timeout = 1000  # close connection if no new data within 5 seconds
