@@ -90,10 +90,10 @@ class RDT:
     def set_window_size(self, number):
         self.window_size = number
     
-    def add_packets(self,Packet):
+    def add_packets(self,Packet: Packet):
         self.packets.append(Packet)
     
-    def remove_packets(self,Packet):
+    def remove_packets(self,Packet: Packet):
         self.packets.remove(Packet)
         
     def disconnect(self):
