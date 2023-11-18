@@ -297,7 +297,28 @@ if __name__ == '__main__':
         print(rdt.rdt_3_0_receive())
         rdt.rdt_3_0_send('MSG_FROM_SERVER')
         rdt.disconnect()
-        
+
+if __name__ == '__main2__':
+    parser = argparse.ArgumentParser(description='RDT implementation.')
+    parser.add_argument('role', help='Role is either client or server.', choices=['client', 'server'])
+    parser.add_argument('server', help='Server.')
+    parser.add_argument('port', help='Port.', type=int)
+    args = parser.parse_args()
+
+    rdt = RDT(args.role, args.server, args.port)
+    if args.role == 'client':
+        rdt.rdt_4_0_send('MSG_FROM_CLIENT')
+        sleep(2)
+        print(rdt.rdt_4_0_receive())
+        rdt.disconnect()
+
+
+    else:
+        sleep(1)
+        print(rdt.rdt_4_0_receive())
+        rdt.rdt_4_0_send('MSG_FROM_SERVER')
+        rdt.disconnect()
+
 # Step 1 − Frame 0 sends from sender to receiver and set timer.
 
 # Step 2 − Without waiting for acknowledgement from the receiver another frame, Frame1 is sent by sender by setting the timer for it.
