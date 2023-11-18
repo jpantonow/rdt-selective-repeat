@@ -22,6 +22,7 @@ class NetworkLayer:
     stop = None
     socket_timeout = 0.1
     reorder_msg_S = None
+    throughput = 0
 
     def __init__(self, role_S, server_S, port):
         if role_S == 'client':

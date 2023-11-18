@@ -66,6 +66,14 @@ class Packet:
             return True
         return False
 
+    # def force_loss(self,prob_pkt_loss):
+    #     return self(seq_num, msg_S)
+    
+    # def force_corrupt(self,prob_pkt_corr):
+    #     return self(seq_num, msg_S)
+    
+    # def force_reorder(self,prob_pkt_reorder):
+    #     return self(seq_num, msg_S)
 
 class RDT:
     # latest sequence number used in a packet
@@ -74,10 +82,14 @@ class RDT:
     byte_buffer = ''
     timeout = 3
     
-    def __init__(self, role_S, server_S, port):
+    def __init__(self, role_S, server_S, port, window_size=None):
         self.network = Network.NetworkLayer(role_S, server_S, port)
         self.packets = []
-        
+        self.window_size = window_size
+    
+    def set_window_size(self, number):
+        self.window_size = number
+    
     def add_packets(self,Packet):
         self.packets.append(Packet)
     
@@ -207,7 +219,7 @@ class RDT:
                     self.network.udt_send(test.get_byte_S())
                 elif response_p.msg_S is "1":
                     debug_log("SENDER: Received ACK, move on to next.")
-                    debug_log("SENDER: Incrementing seq_num from {} to {}".format(self.seq_num, self.seq_num + 1))
+                    debug_log(f"SENDER: Incrementing seq_num from {self.seq_num} to {self.seq_num+1}")
                     self.seq_num += 1
                 elif response_p.msg_S is "0":
                     debug_log("SENDER: NAK received")
