@@ -66,14 +66,30 @@ class Packet:
             return True
         return False
 
-    # def force_loss(self,prob_pkt_loss):
-    #     return self(seq_num, msg_S)
+    def force_loss(self,prob_pkt_loss):
+        lost_characters = round(len(self.msg_S) * prob_pkt_loss/100)
+        while(lost_characters):
+            lost_characters -= 1
+            self.msg_S = self.msg_S[1:]
+        return self(seq_num, msg_S)
     
-    # def force_corrupt(self,prob_pkt_corr):
-    #     return self(seq_num, msg_S)
+    def force_corrupt(self,prob_pkt_corr):
+        corrupt_characters = round(len(self.msg_S) * prob_pkt_corr/100)
+        while(corrupt_characters):
+            corrupt_characters -= 1
+            self.msg_S[corrupt_characters] = "@"
+        return self(seq_num, msg_S)
     
-    # def force_reorder(self,prob_pkt_reorder):
-    #     return self(seq_num, msg_S)
+    def force_reorder(self,prob_pkt_reorder):
+        reorder_characters = round(len(self.msg_S) * prob_pkt_reorder/100)
+        i = 0
+        while(reorder_characters):
+            reorder_characters -= 1
+            i+=1
+            (self.msg_S[i],self.msg_S[len(self.msg_S)-1]) = \
+            (self.msg_S[len(self.msg_S)-1],self.msg_S[i])
+            
+        return self(seq_num, msg_S)
 
 class RDT:
     # latest sequence number used in a packet
@@ -193,24 +209,23 @@ class RDT:
     
     def rdt_4_0_send(self, messages):
         packets = []
-        packets_n_time = {}
+        packtime = {}
         
         for msg_S in messages:
             packets.append(Packet(self.seq_num,msg_S))
             
         current_seq = self.seq_num
            
-        while current_seq == self.seq_num:
-            for i in range(0,len(packets)-1):
-                self.network.udt_send(packets[i].get_byte_S())
-                packets_n_time[packets[i]] = time.time()
+        for i in range(0,len(packets)-1):
+            self.network.udt_send(packets[i].get_byte_S())
+            packtime[packets[i]] = time.time()
             
-            response = ''
-            #timer = time.time()
+        response = ''
+        #timer = time.time()
 
-            # Waiting for ack/nak
-            while response == '' and timer + self.timeout > time.time():
-                response = self.network.udt_receive()
+        # Waiting for ack/nak
+        while response == '' and timer + self.timeout > time.time():
+            response = self.network.udt_receive()
 
             if response == '':
                 continue
