@@ -208,6 +208,13 @@ class RDT:
         return ret_S
     
     def rdt_4_0_send(self, messages):
+        #data from above:
+        #if next available seq in window -> send packet
+        #timeout(n):
+        #resend packet n, restart timer
+        
+        #ack(n) in recv --> mark packet n as received
+        #if n smallest unacked packet advance window to unnacked seq
         #configurar identifier para ter o mesmo numero de ack
         
         packets = []
@@ -263,6 +270,11 @@ class RDT:
         
 
     def rdt_4_0_receive(self):
+        #send ack(n)
+        #if auto-of-order -> buffer
+        #if in order -> deliver buffered or in-order,
+        #advance window to not received packet
+        #packet n in recv -> ack(n) otherwise ignore
         ret_S = None
         byte_S = self.network.udt_receive()
         self.byte_buffer += byte_S
