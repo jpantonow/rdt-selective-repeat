@@ -71,14 +71,14 @@ class Packet:
         while(lost_characters):
             lost_characters -= 1
             self.msg_S = self.msg_S[1:]
-        return self(seq_num, msg_S)
+        return self(self.seq_num, self.msg_S)
     
     def force_corrupt(self,prob_pkt_corr):
         corrupt_characters = round(len(self.msg_S) * prob_pkt_corr/100)
         while(corrupt_characters):
             corrupt_characters -= 1
             self.msg_S[corrupt_characters] = "@"
-        return self(seq_num, msg_S)
+        return self(self.seq_num, self.msg_S)
     
     def force_reorder(self,prob_pkt_reorder):
         reorder_characters = round(len(self.msg_S) * prob_pkt_reorder/100)
@@ -89,7 +89,7 @@ class Packet:
             (self.msg_S[i],self.msg_S[len(self.msg_S)-1]) = \
             (self.msg_S[len(self.msg_S)-1],self.msg_S[i])
             
-        return self(seq_num, msg_S)
+        return self(self.seq_num, self.msg_S)
 
 class RDT:
     # latest sequence number used in a packet
@@ -208,6 +208,8 @@ class RDT:
         return ret_S
     
     def rdt_4_0_send(self, messages):
+        #configurar identifier para ter o mesmo numero de ack
+        
         packets = []
         packtime = {}
         
@@ -248,8 +250,8 @@ class RDT:
                             debug_log("SENDER: Receiver behind sender")
                             test = Packet(response_p.seq_num, "1")
                             self.network.udt_send(test.get_byte_S())
-                        elif response_p.msg_S is "1": #tem q ser todas as respostas
-                            debug_log("SENDER: Received ACK, move on to next.")
+                        elif response_p.msg_S is "1": #nao eh 1, e sim ACK(n)
+                            debug_log("SENDER: Received ACK(n), move on to next.")
                             debug_log("SENDER: Incrementing seq_num from {} to {}".format(self.seq_num, self.seq_num + self.window_size))
                             self.seq_num += 1
                         elif response_p.msg_S is "0":
@@ -290,12 +292,12 @@ class RDT:
                     self.byte_buffer = self.byte_buffer[length:]
                     continue
                 if p.seq_num < self.seq_num:
-                    debug_log('RECEIVER: Already received packet.  ACK again.')
+                    debug_log('RECEIVER: Already received packet.  ACK(n) again.')
                     # Send another ACK
                     answer = Packet(p.seq_num, "1")
                     self.network.udt_send(answer.get_byte_S())
                 elif p.seq_num == self.seq_num:
-                    debug_log('RECEIVER: Received new.  Send ACK and increment seq.')
+                    debug_log('RECEIVER: Received new.  Send ACK(n) and increment seq.')
                     # SEND ACK
                     answer = Packet(self.seq_num, "1")
                     self.network.udt_send(answer.get_byte_S())
