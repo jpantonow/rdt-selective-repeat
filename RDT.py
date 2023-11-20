@@ -206,6 +206,18 @@ class RDT:
             self.byte_buffer = self.byte_buffer[length:]
             # if this was the last packet, will return on the next iteration
         return ret_S
+ 
+    
+    # Sender’s Windows ( Ws) = Receiver’s Windows ( Wr).
+    # Sender can transmit new packets as long as their number is with W of all unACKed packets.
+    # Sender retransmit un-ACKed packets after a timeout – Or upon a NAK if NAK is employed.
+    # Receiver ACKs all correct packets.
+    # Receiver stores correct packets until they can be delivered in order to the higher layer.
+    # In Selective Repeat ARQ, the size of the sender and receiver window must be at most one-half of 2^m.
+    # Window size should be less than or equal to half the sequence number in SR protocol. This is to avoid packets 
+    # being recognized incorrectly. If the size of the window is greater than half the sequence number space, 
+    # then if an ACK is lost, 
+    # the sender may send new packets that the receiver believes are retransmissions.
     
     def rdt_4_0_send(self, messages):
         #data from above:
