@@ -66,30 +66,6 @@ class Packet:
             return True
         return False
 
-    # def force_loss(self,prob_pkt_loss):
-    #     lost_characters = round(len(self.msg_S) * prob_pkt_loss/100)
-    #     while(lost_characters):
-    #         lost_characters -= 1
-    #         self.msg_S = self.msg_S[1:]
-    #     return self(self.seq_num, self.msg_S)
-    
-    # def force_corrupt(self,prob_pkt_corr):
-    #     corrupt_characters = round(len(self.msg_S) * prob_pkt_corr/100)
-    #     while(corrupt_characters):
-    #         corrupt_characters -= 1
-    #         self.msg_S[corrupt_characters] = "@"
-    #     return self(self.seq_num, self.msg_S)
-    
-    # def force_reorder(self,prob_pkt_reorder):
-    #     reorder_characters = round(len(self.msg_S) * prob_pkt_reorder/100)
-    #     i = 0
-    #     while(reorder_characters):
-    #         reorder_characters -= 1
-    #         i+=1
-    #         (self.msg_S[i],self.msg_S[len(self.msg_S)-1]) = \
-    #         (self.msg_S[len(self.msg_S)-1],self.msg_S[i])
-            
-    #     return self(self.seq_num, self.msg_S)
 
 class RDT:
     # latest sequence number used in a packet
@@ -243,6 +219,7 @@ class RDT:
             iterator += 1
         
         self.set_window_size(round(len(packets)/2))
+        responses = []
         
         for packet in packets:
             response = ''
@@ -256,9 +233,11 @@ class RDT:
                 continue 
             
             debug_log("SENDER: " + response)
-
+            responses.append(response)
+            
             #ate aqui to pegando as respostas, depois que eh o problema
             
+        for response in responses:
             msg_length = int(response[:Packet.length_S_length])
             self.byte_buffer = response[msg_length:]
 
@@ -283,47 +262,6 @@ class RDT:
                 self.byte_buffer = ''
                 packet.append()
                 
-                
-        # while(number_of_packets):
-        #     for i in range(0,len(packets)-1):
-        #         if():
-        #             self.network.udt_send(packets[i].get_byte_S())
-        #             packtime[packets[i]] = time.time()
-        #         max_send -= 1
-        #         number_of_packets -= 1
-        #         for packet in packtime:
-        #             response = ''
-                    
-        #             while response == '' and packtime[packet] + self.timeout > time.time():
-        #                 response = self.network.udt_receive()
-                    
-        #             if response == '':
-        #                 #re-send it
-        #                 continue
-                    
-        #             debug_log("SENDER: " + response)
-                    
-        #             msg_length = int(response[:Packet.length_S_length])
-        #             self.byte_buffer = response[msg_length:]
-                    
-        #             if not Packet.corrupt(response[:msg_length]):
-        #                 response_p = Packet.from_byte_S(response[:msg_length])
-        #                 if response_p.seq_num < self.seq_num:
-        #                     # It's trying to send me data again
-        #                     debug_log("SENDER: Receiver behind sender")
-        #                     test = Packet(response_p.seq_num, "1")
-        #                     self.network.udt_send(test.get_byte_S())
-        #                 elif response_p.msg_S is "1": #nao eh 1, e sim ACK(n)
-        #                     debug_log("SENDER: Received ACK(n), move on to next.")
-        #                     debug_log("SENDER: Incrementing seq_num from {} to {}".format(self.seq_num, self.seq_num + self.window_size))
-        #                     self.seq_num += 1
-        #                 elif response_p.msg_S is "0":
-        #                     debug_log("SENDER: NAK received")
-        #                     self.byte_buffer = ''
-        #             else:
-        #                 debug_log("SENDER: Corrupted ACK")
-        #                 self.byte_buffer = ''
-        
 
     def rdt_4_0_receive(self):
         #send ack(n)
@@ -335,6 +273,7 @@ class RDT:
         byte_S = self.network.udt_receive()
         self.byte_buffer += byte_S
         current_seq = self.seq_num
+        buffer = []
         # Don't move on until seq_num has been toggled
         # keep extracting packets - if reordered, could get more than one
         while current_seq == self.seq_num:
