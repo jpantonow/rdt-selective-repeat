@@ -256,11 +256,9 @@ class RDT:
                 elif response_p.msg_S is "0":
                     debug_log("SENDER: NAK received")
                     self.byte_buffer = ''
-                    packet.append()
             else:
                 debug_log("SENDER: Corrupted ACK")
                 self.byte_buffer = ''
-                packet.append()
                 
 
     def rdt_4_0_receive(self):
