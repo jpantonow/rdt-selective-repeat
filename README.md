@@ -9,3 +9,4 @@
 
 ## Decisões de Projeto
 ### Implementação do Selective-Repeat
+### Link da Simulação: https://nikhilsahu.me/Sliding-window-simulator/SelectiveRepeat.html

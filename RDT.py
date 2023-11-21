@@ -73,11 +73,18 @@ class RDT:
     # buffer of bytes read from network
     byte_buffer = ''
     timeout = 3
+    window_size = 0
     
-    def __init__(self, role_S, server_S, port, window_size=None):
+    def __init__(self, role_S, server_S, port):
         self.network = Network.NetworkLayer(role_S, server_S, port)
         self.packets = []
-        self.window_size = window_size
+    
+    def check_buffer(self,buffer):
+        for i in range(0,len(buffer)-1):
+            if buffer[i].is_ack_pack:
+                buffer.remove(buffer.index(i))
+            return False
+        return True
     
     def set_window_size(self, number):
         self.window_size = number
@@ -92,8 +99,13 @@ class RDT:
     def send_packets(self,Packets):
         for i in range(0,len(Packets)-1):
             self.network.udt_send(Packets[i].get_byte_S())
-            
-     
+    
+    def adjust_packet_size(self,packets):
+        seq_num = int(self.seq_num)
+        window_size = int(self.window_size)
+        new_packet = packets[seq_num:window_size]
+        return new_packet
+             
     def remove_packets(self,Packet: Packet):
         self.packets.remove(Packet)
         
@@ -210,57 +222,66 @@ class RDT:
         #ack(n) in recv --> mark packet n as received
         #if n smallest unacked packet advance window to unnacked seq
         #configurar identifier para ter o mesmo numero de ack
-        
+        msg_acks = []
         packets = []
         packtime = {}
         iterator = 0
         for msg_S in messages:
             packets.append(Packet(self.seq_num+iterator,msg_S))
             iterator += 1
-        
+        packets_not_empty = len(packets)
         self.set_window_size(round(len(packets)/2))
         responses = []
-        
-        for packet in packets:
-            response = ''
-            self.network.udt_send(packet.get_byte_S())
-            packtime[packets[packets.index(packet)]] = time.time()
-            # Waiting for ack/nak
-            while response == '' and  packtime[packets[packets.index(packet)]] + self.timeout > time.time():
-                response = self.network.udt_receive()
+        size = self.window_size
+        while(packets_not_empty):
+            debug_log(self.seq_num)
+            seq = self.seq_num
+            packet = packets[seq:size]
+            for frame in packet:
+                response = ''
+                self.network.udt_send(frame.get_byte_S())
+                packtime[frame] = time.time()
+                while response == '' and  packtime[frame] + self.timeout > time.time():
+                    response = self.network.udt_receive()
                 
-            if response  == '':
-                continue 
+                if responses  == '':
+                    continue 
             
-            debug_log("SENDER: " + response)
-            responses.append(response)
+                debug_log("SENDER: " + response)
+                responses.append(response)
+                
+            for response in responses:
             
-            #ate aqui to pegando as respostas, depois que eh o problema
-            
-        for response in responses:
-            msg_length = int(response[:Packet.length_S_length])
-            self.byte_buffer = response[msg_length:]
-
-            if not Packet.corrupt(response[:msg_length]):
-                response_p = Packet.from_byte_S(response[:msg_length])
-                if response_p.seq_num < self.seq_num:
-                    # It's trying to send me data again
-                    debug_log("SENDER: Receiver behind sender")
-                    test = Packet(response_p.seq_num, "1")
-                    self.network.udt_send(test.get_byte_S())
-                elif response_p.msg_S is "1":
-                    debug_log("SENDER: Received ACK, move on to next.")
-                    debug_log("SENDER: Incrementing seq_num from {} to {}".format(self.seq_num, self.seq_num + 1))
-                    self.seq_num += 1
-                    self.adjust_window_size(packets)
-                elif response_p.msg_S is "0":
-                    debug_log("SENDER: NAK received")
+                msg_length = int(response[:Packet.length_S_length])
+                self.byte_buffer = response[msg_length:]
+                
+                if not Packet.corrupt(response[:msg_length]):
+                    response_p = Packet.from_byte_S(response[:msg_length])
+                    msg_acks.append(response_p)
+                    if response_p.seq_num < self.seq_num:
+                        # It's trying to send me data again
+                        debug_log("SENDER: Receiver behind sender")
+                        test = Packet(response_p.seq_num, "1")
+                        self.network.udt_send(test.get_byte_S())
+                        
+                    elif response_p.msg_S is "1":
+                        debug_log("SENDER: Received ACK, move on to next.")
+                        debug_log("SENDER: Incrementing seq_num from {} to {}".format(self.seq_num, self.seq_num + 1))
+                        
+                        if(self.check_buffer(msg_acks)):
+                            responses.pop(0)
+                            self.seq_num += 1
+                        
+                    elif response_p.msg_S is "0":
+                        debug_log("SENDER: NAK received")
+                        self.byte_buffer = ''
+                else:
+                    debug_log("SENDER: Corrupted ACK")
                     self.byte_buffer = ''
-            else:
-                debug_log("SENDER: Corrupted ACK")
-                self.byte_buffer = ''
-                
 
+            sleep(5)
+            packets_not_empty -= 1
+            
     def rdt_4_0_receive(self):
         #send ack(n)
         #if auto-of-order -> buffer
@@ -271,7 +292,6 @@ class RDT:
         byte_S = self.network.udt_receive()
         self.byte_buffer += byte_S
         current_seq = self.seq_num
-        buffer = []
         # Don't move on until seq_num has been toggled
         # keep extracting packets - if reordered, could get more than one
         while current_seq == self.seq_num:
