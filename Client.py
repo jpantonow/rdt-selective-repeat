@@ -45,6 +45,11 @@ import time
 #         rdt.disconnect()
 #         print("Connection ended.")
 
+
+
+
+#O código deve permitir o envio de múltiplas mensagens entre o cliente e servidor.
+# O número de mensagens deve ser definido como argumento de linha do cliente.
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Quotation client talking to a Pig Latin server.')
     parser.add_argument('server', help='Server.')
@@ -61,20 +66,21 @@ if __name__ == '__main__':
     
     for i in range(0,2): #pra tornar mais extenso 
         messages.append(msg_L)
-    
-    timeout = 2000  # send the next message if not response
-    time_of_last_data = time.time()
+    timeout = 1000  # send the next message if not response
     rdt = RDT.RDT('client', args.server, args.port)
     try:
         for msg_L in messages:
             for message in msg_L:
+                    time_of_last_data = time.time()
                 print('Client asking to change case: ' + message)
             
-            # try to receive message before timeout
+                # try to receive message before timeout
             rdt.rdt_4_0_send(msg_L)
             msg_s = None
             while msg_s == None:
                 msg_s = rdt.rdt_4_0_receive()
+                
+                #ele nao chega nesse if
                 if msg_s is None:
                     if time_of_last_data + timeout < time.time():
                         break
@@ -82,9 +88,9 @@ if __name__ == '__main__':
                         continue
             time_of_last_data = time.time()
 
-                # print the result
+                    # print the result
             if msg_s:
-               print('Client: Received the converted frase to: ' + msg_s + '\n')
+                print('Client: Received the converted frase to: ' + msg_s + '\n')
     
     except (KeyboardInterrupt, SystemExit):
         print("Ending connection...")
