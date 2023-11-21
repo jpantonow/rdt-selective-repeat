@@ -106,6 +106,10 @@ class RDT:
     def set_window_size(self, number):
         self.window_size = number
     
+    def adjust_window_size(self,packet):
+        for i in range(0,self.window_size-1):
+            packet[i] = packet[i+1]
+                
     def add_packets(self,Packet: Packet):
         self.packets.append(Packet)
     
@@ -233,27 +237,28 @@ class RDT:
         
         packets = []
         packtime = {}
-        
         iterator = 0
         for msg_S in messages:
             packets.append(Packet(self.seq_num+iterator,msg_S))
             iterator += 1
         
+        self.set_window_size(round(len(packets)/2))
+        
         for packet in packets:
             response = ''
-            self.set_window_size((2^(packet.seq_num))/2)
             self.network.udt_send(packet.get_byte_S())
             packtime[packets[packets.index(packet)]] = time.time()
-            debug_log(packtime)
             # Waiting for ack/nak
             while response == '' and  packtime[packets[packets.index(packet)]] + self.timeout > time.time():
                 response = self.network.udt_receive()
+                
             if response  == '':
                 continue 
             
-            debug_log(response)
             debug_log("SENDER: " + response)
 
+            #ate aqui to pegando as respostas, depois que eh o problema
+            
             msg_length = int(response[:Packet.length_S_length])
             self.byte_buffer = response[msg_length:]
 
@@ -268,12 +273,16 @@ class RDT:
                     debug_log("SENDER: Received ACK, move on to next.")
                     debug_log("SENDER: Incrementing seq_num from {} to {}".format(self.seq_num, self.seq_num + 1))
                     self.seq_num += 1
+                    self.adjust_window_size(packets)
                 elif response_p.msg_S is "0":
                     debug_log("SENDER: NAK received")
                     self.byte_buffer = ''
+                    packet.append()
             else:
                 debug_log("SENDER: Corrupted ACK")
                 self.byte_buffer = ''
+                packet.append()
+                
                 
         # while(number_of_packets):
         #     for i in range(0,len(packets)-1):
@@ -370,28 +379,28 @@ class RDT:
         return ret_S
 
 
+# if __name__ == '__main__':
+#     parser = argparse.ArgumentParser(description='RDT implementation.')
+#     parser.add_argument('role', help='Role is either client or server.', choices=['client', 'server'])
+#     parser.add_argument('server', help='Server.')
+#     parser.add_argument('port', help='Port.', type=int)
+#     args = parser.parse_args()
+
+#     rdt = RDT(args.role, args.server, args.port)
+#     if args.role == 'client':
+#         rdt.rdt_3_0_send('MSG_FROM_CLIENT')
+#         sleep(2)
+#         print(rdt.rdt_3_0_receive())
+#         rdt.disconnect()
+
+
+#     else:
+#         sleep(1)
+#         print(rdt.rdt_3_0_receive())
+#         rdt.rdt_3_0_send('MSG_FROM_SERVER')
+#         rdt.disconnect()
+
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='RDT implementation.')
-    parser.add_argument('role', help='Role is either client or server.', choices=['client', 'server'])
-    parser.add_argument('server', help='Server.')
-    parser.add_argument('port', help='Port.', type=int)
-    args = parser.parse_args()
-
-    rdt = RDT(args.role, args.server, args.port)
-    if args.role == 'client':
-        rdt.rdt_3_0_send('MSG_FROM_CLIENT')
-        sleep(2)
-        print(rdt.rdt_3_0_receive())
-        rdt.disconnect()
-
-
-    else:
-        sleep(1)
-        print(rdt.rdt_3_0_receive())
-        rdt.rdt_3_0_send('MSG_FROM_SERVER')
-        rdt.disconnect()
-
-if __name__ == '__main2__':
     parser = argparse.ArgumentParser(description='RDT implementation.')
     parser.add_argument('role', help='Role is either client or server.', choices=['client', 'server'])
     parser.add_argument('server', help='Server.')
