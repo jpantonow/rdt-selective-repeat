@@ -53,6 +53,11 @@ class NetworkLayer:
         if self.sock is not None: self.sock.close()
         if self.conn is not None: self.conn.close()
 
+    def udt_send_list(self,listMsg_S):
+        if(listMsg_S):
+            for msg in listMsg_S:
+                udt_send(msg)
+                
     def udt_send(self, msg_S):
         # return without sending if the packet is being dropped
         if random.random() < self.prob_pkt_loss:
@@ -102,7 +107,6 @@ class NetworkLayer:
             ret_S = self.buffer_S
             self.buffer_S = ''
         return ret_S
-
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Network layer implementation.')

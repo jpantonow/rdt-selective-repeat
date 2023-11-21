@@ -241,7 +241,7 @@ class RDT:
             response = ''
             self.network.udt_send(frame.get_byte_S())
             timer = time.time()
-            while response == '' and  timer + self.timeout > time.time():
+            while response == '' and  (timer + self.timeout) > time.time():
                 response = self.network.udt_receive()
             
             if response  == '':
@@ -249,9 +249,7 @@ class RDT:
             
             debug_log("SENDER: " + response)
             responses.append(response)
-                
-
-            debug_log("tamanho de responses ==" f"{len(responses)}")
+           
             msg_length = int(response[:Packet.length_S_length])
             self.byte_buffer = response[msg_length:]
 
@@ -268,7 +266,6 @@ class RDT:
                     debug_log("SENDER: Received ACK, move on to next.")
                     debug_log("SENDER: Incrementing seq_num from {} to {}".format(
                             self.seq_num, self.seq_num + 1))
-
                     self.seq_num += 1
                     # if (self.check_buffer(msg_acks)):
                     #     responses.pop(0)
@@ -311,7 +308,7 @@ class RDT:
                 answer = Packet(self.seq_num, "0")
                 self.network.udt_send(answer.get_byte_S())
             else:
-                # create packet from buffer content
+                    # create packet from buffer content
                 p = Packet.from_byte_S(self.byte_buffer[0:length])
                 # Check packet
                 if p.is_ack_pack():
