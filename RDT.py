@@ -238,20 +238,20 @@ class RDT:
         for msg_S in messages:
             packets.append(Packet(self.seq_num+iterator,msg_S))
             iterator += 1
-            
-        current_seq = self.seq_num
         
         for packet in packets:
+            response = ''
             self.set_window_size((2^(packet.seq_num))/2)
             self.network.udt_send(packet.get_byte_S())
-            packtime[packets[i]] = time.time()
+            packtime[packets[packets.index(packet)]] = time.time()
+            debug_log(packtime)
             # Waiting for ack/nak
-            while response == '' and timer + self.timeout > time.time():
+            while response == '' and  packtime[packets[packets.index(packet)]] + self.timeout > time.time():
                 response = self.network.udt_receive()
-            
             if response  == '':
                 continue 
             
+            debug_log(response)
             debug_log("SENDER: " + response)
 
             msg_length = int(response[:Packet.length_S_length])
@@ -274,6 +274,7 @@ class RDT:
             else:
                 debug_log("SENDER: Corrupted ACK")
                 self.byte_buffer = ''
+                
         # while(number_of_packets):
         #     for i in range(0,len(packets)-1):
         #         if():
