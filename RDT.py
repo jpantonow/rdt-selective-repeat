@@ -213,7 +213,7 @@ class RDT:
     
     #The size of the sender's window is 2^m-1, where m is the number of bits used in the
     #header of the packet to express the packet's sequence number. 
-    def rdt_4_0_send(self, messages):
+    def rdt_4_0_send(self, msg_L):
         #data from above:
         #if next available seq in window -> send packet
         #timeout(n):
@@ -226,61 +226,62 @@ class RDT:
         packets = []
         packtime = {}
         iterator = 0
-        for msg_S in messages:
+        for msg_S in msg_L:
             packets.append(Packet(self.seq_num+iterator,msg_S))
             iterator += 1
-        packets_not_empty = len(packets)
+        
         self.set_window_size(round(len(packets)/2))
         responses = []
         size = self.window_size
-        while(packets_not_empty):
-            debug_log(self.seq_num)
-            seq = self.seq_num
-            packet = packets[seq:size]
-            for frame in packet:
-                response = ''
-                self.network.udt_send(frame.get_byte_S())
-                packtime[frame] = time.time()
-                while response == '' and  packtime[frame] + self.timeout > time.time():
-                    response = self.network.udt_receive()
-                
-                if responses  == '':
-                    continue 
-            
-                debug_log("SENDER: " + response)
-                responses.append(response)
-                
-            for response in responses:
-            
-                msg_length = int(response[:Packet.length_S_length])
-                self.byte_buffer = response[msg_length:]
-                
-                if not Packet.corrupt(response[:msg_length]):
-                    response_p = Packet.from_byte_S(response[:msg_length])
-                    msg_acks.append(response_p)
-                    if response_p.seq_num < self.seq_num:
-                        # It's trying to send me data again
-                        debug_log("SENDER: Receiver behind sender")
-                        test = Packet(response_p.seq_num, "1")
-                        self.network.udt_send(test.get_byte_S())
-                        
-                    elif response_p.msg_S is "1":
-                        debug_log("SENDER: Received ACK, move on to next.")
-                        debug_log("SENDER: Incrementing seq_num from {} to {}".format(self.seq_num, self.seq_num + 1))
-                        
-                        if(self.check_buffer(msg_acks)):
-                            responses.pop(0)
-                            self.seq_num += 1
-                        
-                    elif response_p.msg_S is "0":
-                        debug_log("SENDER: NAK received")
-                        self.byte_buffer = ''
-                else:
-                    debug_log("SENDER: Corrupted ACK")
-                    self.byte_buffer = ''
 
-            sleep(5)
-            packets_not_empty -= 1
+        debug_log(self.seq_num)
+        seq = self.seq_num
+        packet = packets[seq:size]
+        for frame in packet:
+            response = ''
+            self.network.udt_send(frame.get_byte_S())
+            timer = time.time()
+            while response == '' and  timer + self.timeout > time.time():
+                response = self.network.udt_receive()
+            
+            if response  == '':
+                continue 
+            
+            debug_log("SENDER: " + response)
+            responses.append(response)
+                
+
+            debug_log("tamanho de responses ==" f"{len(responses)}")
+            msg_length = int(response[:Packet.length_S_length])
+            self.byte_buffer = response[msg_length:]
+
+            if not Packet.corrupt(response[:msg_length]):
+                response_p = Packet.from_byte_S(response[:msg_length])
+                msg_acks.append(response_p)
+                if response_p.seq_num < self.seq_num:
+                    # It's trying to send me data again
+                    debug_log("SENDER: Receiver behind sender")
+                    test = Packet(response_p.seq_num, "1")
+                    self.network.udt_send(test.get_byte_S())
+
+                elif response_p.msg_S is "1":
+                    debug_log("SENDER: Received ACK, move on to next.")
+                    debug_log("SENDER: Incrementing seq_num from {} to {}".format(
+                            self.seq_num, self.seq_num + 1))
+
+                    self.seq_num += 1
+                    # if (self.check_buffer(msg_acks)):
+                    #     responses.pop(0)
+                    #     self.seq_num += 1
+
+                elif response_p.msg_S is "0":
+                    debug_log("SENDER: NAK received")
+                    self.byte_buffer = ''
+            else:
+                debug_log("SENDER: Corrupted ACK")
+                self.byte_buffer = ''
+
+
             
     def rdt_4_0_receive(self):
         #send ack(n)

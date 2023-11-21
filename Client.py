@@ -69,22 +69,24 @@ if __name__ == '__main__':
         for msg_L in messages:
             for message in msg_L:
                 print('Client asking to change case: ' + message)
-            rdt.rdt_4_0_send(msg_L)
-
+            
             # try to receive message before timeout
-            msg_L = None
-            while msg_L == None:
-                msg_L = rdt.rdt_4_0_receive()
-                if msg_L is None:
-                    if time_of_last_data + timeout < time.time():
-                        break
-                    else:
-                        continue
-            time_of_last_data = time.time()
+            for msg_s in msg_L:
+                rdt.rdt_4_0_send(msg_L)
+                msg_s = None
+                while msg_s == None:
+                    msg_s = rdt.rdt_4_0_receive()
+                    if msg_s is None:
+                        if time_of_last_data + timeout < time.time():
+                            break
+                        else:
+                            continue
+                time_of_last_data = time.time()
 
-            # print the result
-            if msg_L:
-                print('Client: Received the converted frase to: ' + msg_L + '\n')
+                # print the result
+                if msg_s:
+                    print('Client: Received the converted frase to: ' + msg_s + '\n')
+    
     except (KeyboardInterrupt, SystemExit):
         print("Ending connection...")
     except (BrokenPipeError, ConnectionAbortedError, ConnectionResetError):
