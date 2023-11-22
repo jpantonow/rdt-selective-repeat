@@ -229,6 +229,7 @@ class RDT:
         for msg_S in msg_L:
             packets.append(Packet(self.seq_num+iterator,msg_S))
             iterator += 1
+            debug_log(msg_S)
         
         self.set_window_size(round(len(packets)/2))
         responses = []
@@ -236,7 +237,9 @@ class RDT:
 
         debug_log(self.seq_num)
         seq = self.seq_num
-        packet = packets[seq:size]
+        #packet = packets[seq:size]
+        packet = packets
+        debug_log("packet sending == " + f"{packet}")
         for frame in packet:
             response = ''
             self.network.udt_send(frame.get_byte_S())
@@ -246,8 +249,6 @@ class RDT:
                 
             if response  == '':
                 continue 
-            
-            debug_log("SENDER: " + response)
 
             msg_length = int(response[:Packet.length_S_length])
             self.byte_buffer = response[msg_length:]
@@ -277,6 +278,7 @@ class RDT:
                 debug_log("SENDER: Corrupted ACK")
                 self.byte_buffer = ''
 
+            debug_log("SENDER: " + response)
             
     def rdt_4_0_receive(self):
         #send ack(n)
