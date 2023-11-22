@@ -46,12 +46,12 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     timeout = 1000  # close connection if no new data within 5 seconds
-    time_of_last_data = time.time()
     lista = []
     rdt = RDT.RDT('server', None, args.port)
     try:
         while True:
             # try to receiver message before timeout
+            time_of_last_data = time.time()
             msg_L = rdt.rdt_4_0_receive()
             if msg_L is None:
                 if time_of_last_data + timeout < time.time():
@@ -59,7 +59,7 @@ if __name__ == '__main__':
                 else:
                     continue
             if(msg_L):
-                print(f"udt_receive == {msg_L}")
+                print(f"SERVIDOR RECEBEU == {msg_L}")
             time_of_last_data = time.time()
             # convert and reply
             rep_msg_L = upperCase(msg_L)
