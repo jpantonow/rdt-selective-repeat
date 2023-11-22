@@ -243,7 +243,7 @@ class RDT:
         packet = packets
         debug_log("packet sending == " + f"{packet}")
         for frame in packet:
-            debug_log(frame.msg_S)
+            debug_log("frame enviado:" + f"{frame.msg_S}")
             response = ''
             self.network.udt_send(frame.get_byte_S())
             timer = time.time()

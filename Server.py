@@ -66,6 +66,7 @@ if __name__ == '__main__':
             listconverted = [rep_msg_L]
             lista.append(rep_msg_L)
             rdt.rdt_4_0_send(listconverted)
+            print(f"lista convertida == {listconverted}")
 
                 
     except (KeyboardInterrupt, SystemExit):
