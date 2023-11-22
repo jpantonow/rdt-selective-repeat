@@ -243,13 +243,12 @@ class RDT:
             timer = time.time()
             while response == '' and  (timer + self.timeout) > time.time():
                 response = self.network.udt_receive()
-            
+                
             if response  == '':
                 continue 
             
             debug_log("SENDER: " + response)
-            responses.append(response)
-           
+
             msg_length = int(response[:Packet.length_S_length])
             self.byte_buffer = response[msg_length:]
 
@@ -277,7 +276,6 @@ class RDT:
             else:
                 debug_log("SENDER: Corrupted ACK")
                 self.byte_buffer = ''
-
 
             
     def rdt_4_0_receive(self):
