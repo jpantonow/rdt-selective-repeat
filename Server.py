@@ -66,9 +66,8 @@ if __name__ == '__main__':
             print('Server: converted %s \nto %s\n' % (msg_L, rep_msg_L))
             listconverted = [rep_msg_L]
             lista.append(rep_msg_L)
-            rdt.rdt_4_0_send(lista)
-            print(f"lista convertida == {listconverted}")
-            print(f"lista total == {lista}")
+            rdt.rdt_4_0_send(listconverted)
+
 
                 
     except (KeyboardInterrupt, SystemExit):
