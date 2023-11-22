@@ -72,7 +72,7 @@ if __name__ == '__main__':
         for msg_L in messages:
             for message in msg_L:
                     time_of_last_data = time.time()
-                print('Client asking to change case: ' + message)
+                    print('Client asking to change case: ' + message)
             
                 # try to receive message before timeout
             rdt.rdt_4_0_send(msg_L)
