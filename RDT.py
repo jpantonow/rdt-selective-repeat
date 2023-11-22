@@ -231,7 +231,6 @@ class RDT:
         for msg_S in msg_L:
             packets.append(Packet(self.seq_num+iterator,msg_S))
             iterator += 1
-            debug_log(msg_S)
         
         self.set_window_size(round(len(packets)/2))
         responses = []
@@ -243,6 +242,7 @@ class RDT:
         packet = packets
         debug_log("packet sending == " + f"{packet}")
         for frame in packet:
+            self.byte_buffer = ''
             debug_log("frame enviado:" + f"{frame.msg_S}")
             response = ''
             self.network.udt_send(frame.get_byte_S())
@@ -260,17 +260,17 @@ class RDT:
             if not Packet.corrupt(response[:msg_length]):
                 response_p = Packet.from_byte_S(response[:msg_length])
                 msg_acks.append(response_p)
-                if response_p.seq_num < self.seq_num:
-                    # It's trying to send me data again
+                if frame.msg_S in self.buffer:
                     debug_log("SENDER: Receiver behind sender")
                     test = Packet(response_p.seq_num, "1")
                     self.network.udt_send(test.get_byte_S())
-
+            
                 elif response_p.msg_S is "1":
                     debug_log("SENDER: Received ACK, move on to next.")
                     debug_log("SENDER: Incrementing seq_num from {} to {}".format(
                             self.seq_num, self.seq_num + 1))
                     self.seq_num += 1
+                    self.buffer.append(frame.msg_S)
                     # if (self.check_buffer(msg_acks)):
                     #     responses.pop(0)
                     #     self.seq_num += 1
@@ -287,7 +287,7 @@ class RDT:
             while(msg_k is None):
                 msg_k = self.rdt_4_0_receive()
             debug_log(f"CLIENT RECEBEU: {msg_k}")
-            self.byte_buffer = ''
+            debug_log(self.buffer)
             
     def rdt_4_0_receive(self):
         #send ack(n)
@@ -341,7 +341,7 @@ class RDT:
             self.byte_buffer = self.byte_buffer[length:]
             # if this was the last packet, will return on the next iteration
         if(ret_S):
-            debug_log(f"RECEIVER: recv = {ret_S}") 
+            debug_log(f"RECEIVER: recv = {ret_S}")
         return ret_S
 
 
