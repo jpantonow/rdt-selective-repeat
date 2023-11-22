@@ -243,12 +243,14 @@ class RDT:
         packet = packets
         debug_log("packet sending == " + f"{packet}")
         for frame in packet:
+            debug_log(frame.msg_S)
             response = ''
             self.network.udt_send(frame.get_byte_S())
             timer = time.time()
             while response == '' and  (timer + self.timeout) > time.time():
                 response = self.network.udt_receive()
-                
+                if(response):
+                    debug_log(f"response == {response}")
             if response  == '':
                 continue 
 
@@ -281,6 +283,10 @@ class RDT:
                 self.byte_buffer = ''
 
             debug_log("SENDER: " + response)
+            msg_k = None
+            while(msg_k is None):
+                msg_k = self.rdt_4_0_receive()
+            debug_log(f"CLIENT RECEBEU: {msg_k}")
             
     def rdt_4_0_receive(self):
         #send ack(n)
