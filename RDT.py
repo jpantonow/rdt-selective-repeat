@@ -341,7 +341,7 @@ class RDT:
             self.byte_buffer = self.byte_buffer[length:]
             # if this was the last packet, will return on the next iteration
         if(ret_S):
-            debug_log(f"RECEIVER: recv = {ret_S}")
+            debug_log(f"RECEIVER: recv = {ret_S}") 
         return ret_S
 
 
