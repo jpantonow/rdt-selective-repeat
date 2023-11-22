@@ -67,6 +67,7 @@ if __name__ == '__main__':
             print('Server: converted %s \nto %s\n' % (msg_L, rep_msg_L))
             listconverted.append(rep_msg_L)
             rdt.rdt_4_0_send(listconverted)
+            print("listconverted==" + f"{listconverted}")
                 
     except (KeyboardInterrupt, SystemExit):
         print("Ending connection...")
