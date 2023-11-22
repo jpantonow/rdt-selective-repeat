@@ -1,7 +1,7 @@
 import argparse
 import RDT
 import time
-
+from time import sleep
 
 def upperCase(message):
     capitalizedSentence = message.upper()
@@ -45,11 +45,12 @@ if __name__ == '__main__':
     parser.add_argument('port', help='Port.', type=int)
     args = parser.parse_args()
 
-    timeout = 1000  # close connection if no new data within 5 seconds
+    timeout = 5000  # close connection if no new data within 5 seconds
     lista = []
     rdt = RDT.RDT('server', None, args.port)
     try:
         while True:
+            sleep(2)
             # try to receiver message before timeout
             time_of_last_data = time.time()
             msg_L = rdt.rdt_4_0_receive()
@@ -66,6 +67,7 @@ if __name__ == '__main__':
             print('Server: converted %s \nto %s\n' % (msg_L, rep_msg_L))
             listconverted = [rep_msg_L]
             lista.append(rep_msg_L)
+            print(lista)
             rdt.rdt_4_0_send(listconverted)
 
 

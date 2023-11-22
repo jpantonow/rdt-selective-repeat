@@ -79,6 +79,7 @@ class RDT:
         self.network = Network.NetworkLayer(role_S, server_S, port)
         self.packets = []
         self.buffer = []
+        self.buffer_rcv = []
     
     def check_buffer(self,buffer):
         for i in range(0,len(buffer)-1):
@@ -225,7 +226,7 @@ class RDT:
                     response = self.network.udt_receive()
                 if response == '':
                     continue
-                
+                sleep(5)
                 debug_log("SENDER: " + response)
                 #sleep(20)
                 msg_length = int(response[:Packet.length_S_length])
@@ -251,16 +252,13 @@ class RDT:
                 else:
                     debug_log("SENDER: Corrupted ACK")
                     self.byte_buffer = ''
+                    
             self.network.buffer_S = ''
             self.byte_buffer = ''      
     
             
     def rdt_4_0_receive(self):
-        #send ack(n)
-        #if auto-of-order -> buffer
-        #if in order -> deliver buffered or in-order,
-        #advance window to not received packet
-        #packet n in recv -> ack(n) otherwise ignore
+        #ver a parada dos buffers no rdt_4_0_receive
         ret_S = None
         byte_S = self.network.udt_receive()
         self.byte_buffer += byte_S
