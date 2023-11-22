@@ -47,9 +47,8 @@ if __name__ == '__main__':
 
     timeout = 1000  # close connection if no new data within 5 seconds
     time_of_last_data = time.time()
-
+    lista = []
     rdt = RDT.RDT('server', None, args.port)
-    listconverted = []
     try:
         while True:
             # try to receiver message before timeout
@@ -61,13 +60,13 @@ if __name__ == '__main__':
                     continue
                 
             time_of_last_data = time.time()
-
             # convert and reply
             rep_msg_L = upperCase(msg_L)
             print('Server: converted %s \nto %s\n' % (msg_L, rep_msg_L))
-            listconverted.append(rep_msg_L)
-            rdt.rdt_4_0_send(listconverted)
-            print("listconverted==" + f"{listconverted}")
+            listconverted = [rep_msg_L]
+            lista.append(rep_msg_L)
+            rdt.rdt_4_0_send(lista)
+
                 
     except (KeyboardInterrupt, SystemExit):
         print("Ending connection...")

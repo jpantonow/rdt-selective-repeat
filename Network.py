@@ -56,7 +56,7 @@ class NetworkLayer:
     def udt_send_list(self,listMsg_S):
         if(listMsg_S):
             for msg in listMsg_S:
-                udt_send(msg)
+                self.udt_send(msg)
                 
     def udt_send(self, msg_S):
         # return without sending if the packet is being dropped

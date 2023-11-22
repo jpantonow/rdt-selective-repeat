@@ -78,6 +78,7 @@ class RDT:
     def __init__(self, role_S, server_S, port):
         self.network = Network.NetworkLayer(role_S, server_S, port)
         self.packets = []
+        self.buffer = []
     
     def check_buffer(self,buffer):
         for i in range(0,len(buffer)-1):
@@ -226,6 +227,7 @@ class RDT:
         packets = []
         packtime = {}
         iterator = 0
+        
         for msg_S in msg_L:
             packets.append(Packet(self.seq_num+iterator,msg_S))
             iterator += 1
