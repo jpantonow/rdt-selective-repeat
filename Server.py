@@ -58,15 +58,17 @@ if __name__ == '__main__':
                     break
                 else:
                     continue
-                
+            if(msg_L):
+                print(f"udt_receive == {msg_L}")
             time_of_last_data = time.time()
             # convert and reply
             rep_msg_L = upperCase(msg_L)
             print('Server: converted %s \nto %s\n' % (msg_L, rep_msg_L))
             listconverted = [rep_msg_L]
             lista.append(rep_msg_L)
-            rdt.rdt_4_0_send(lista)
-            print(f"lista convertida == {lista}")
+            rdt.rdt_4_0_send(listconverted)
+            print(f"lista convertida == {listconverted}")
+            print(f"lista total == {lista}")
 
                 
     except (KeyboardInterrupt, SystemExit):

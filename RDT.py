@@ -253,7 +253,7 @@ class RDT:
                     debug_log(f"response == {response}")
             if response  == '':
                 continue 
-
+            
             msg_length = int(response[:Packet.length_S_length])
             self.byte_buffer = response[msg_length:]
 
@@ -287,6 +287,7 @@ class RDT:
             while(msg_k is None):
                 msg_k = self.rdt_4_0_receive()
             debug_log(f"CLIENT RECEBEU: {msg_k}")
+            self.byte_buffer = ''
             
     def rdt_4_0_receive(self):
         #send ack(n)
@@ -339,6 +340,8 @@ class RDT:
             # remove the packet bytes from the buffer
             self.byte_buffer = self.byte_buffer[length:]
             # if this was the last packet, will return on the next iteration
+        if(ret_S):
+            debug_log(f"RECEIVER: recv = {ret_S}")
         return ret_S
 
 
