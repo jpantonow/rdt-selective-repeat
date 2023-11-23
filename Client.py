@@ -79,14 +79,14 @@ if __name__ == '__main__':
             msg_s = rdt.rdt_4_0_receive()
                     
             #         #ele nao chega nesse if
-            # if msg_s is None:
-            #     if time_of_last_data + timeout < time.time():
-            #         break
-            #     else:
-            #         continue
-            # time_of_last_data = time.time()
+            if msg_s is None:
+                if time_of_last_data + timeout < time.time():
+                    break
+                else:
+                    continue
+            time_of_last_data = time.time()
 
-                    # print the result
+            # print the result
             print("converteu")
             print('Client: Received the converted frase to: ' + msg_s + '\n')
     
