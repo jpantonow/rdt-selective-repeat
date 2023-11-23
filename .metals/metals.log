@@ -1,0 +1,8 @@
+2023.11.23 15:36:25 INFO  Started: Metals version 1.1.0 in folders '/home/jpantonow/Documents/Estudos/UNB/4o Semestre/TR2/ProjetoFinal/tr2-projeto-final' for client Visual Studio Code 1.84.1.
+2023.11.23 15:36:26 WARN  Build server is not auto-connectable.
+2023.11.23 15:36:26 WARN  no build tool detected in workspace '/home/jpantonow/Documents/Estudos/UNB/4o Semestre/TR2/ProjetoFinal/tr2-projeto-final'. The most common cause for this problem is that the editor was opened in the wrong working directory, for example if you use sbt then the workspace directory should contain build.sbt. 
+Nov 23, 2023 3:38:03 PM org.eclipse.lsp4j.jsonrpc.services.GenericEndpoint notify
+INFO: Unsupported notification method: $/setTrace
+2023.11.23 17:57:38 INFO  Shutting down server
+2023.11.23 17:57:38 INFO  shutting down Metals
+2023.11.23 17:57:38 INFO  Exiting server

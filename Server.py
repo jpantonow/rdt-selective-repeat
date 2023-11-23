@@ -50,7 +50,6 @@ if __name__ == '__main__':
     rdt = RDT.RDT('server', None, args.port)
     try:
         while True:
-            sleep(2)
             # try to receiver message before timeout
             time_of_last_data = time.time()
             msg_L = rdt.rdt_4_0_receive()
