@@ -80,13 +80,21 @@ class RDT:
         self.packets = []
         self.buffer_send = []
         self.buffer_rcv = []
-    
+        
     def check_buffer(self,buffer):
         for i in range(0,len(buffer)-1):
             if buffer[i].is_ack_pack:
                 buffer.remove(buffer.index(i))
             return False
         return True
+    
+    def clear(self):
+        self.window_size = 0
+        self.seq_num = 0
+        self.byte_buffer = ''
+        self.packets = []
+        self.buffer_send = []
+        self.buffer_rcv = []
     
     def set_window_size(self, number):
         self.window_size = number
@@ -145,7 +153,6 @@ class RDT:
                     response = self.network.udt_receive()
                 if response == '':
                     continue
-                sleep(5)
                 debug_log("SENDER: " + response)
                 #sleep(20)
                 msg_length = int(response[:Packet.length_S_length])
@@ -174,7 +181,7 @@ class RDT:
                     self.byte_buffer = ''
                 
                 self.network.buffer_S = ''
-                self.byte_buffer = ''   
+                self.byte_buffer = ''
                 break
             
     def rdt_4_0_receive(self):
@@ -261,13 +268,11 @@ if __name__ == '__main__':
     rdt = RDT(args.role, args.server, args.port)
     if args.role == 'client':
         rdt.rdt_4_0_send('MSG_FROM_CLIENT')
-        sleep(2)
         print(rdt.rdt_4_0_receive())
         rdt.disconnect()
 
 
     else:
-        sleep(1)
         print(rdt.rdt_4_0_receive())
         rdt.rdt_4_0_send('MSG_FROM_SERVER')
         rdt.disconnect()

@@ -68,6 +68,7 @@ if __name__ == '__main__':
             print(f"lista total == {lista}")
             print(f"listconverted == {listconverted}")
             rdt.rdt_4_0_send(listconverted)
+            rdt.clear()
 
 
                 
