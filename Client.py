@@ -63,32 +63,14 @@ if __name__ == '__main__':
     	'It is hardware that makes a machine fast. It is software that makes a fast machine slow. -- Craig Bruce',
         'The art of debugging is figuring out what you really told your program to do rather than what you thought you told it to do. -- Andrew Singer',
         'The computer was born to solve problems that did not exist before. - Bill Gates']
-    
-    for i in range(0,2): #pra tornar mais extenso 
-        messages.append(msg_L)
+
     timeout = 1000  # send the next message if not response
+    print("a")
     rdt = RDT.RDT('client', args.server, args.port)
     try:
-        for msg_L in messages:
-            for message in msg_L:
-                    time_of_last_data = time.time()
-                    print('Client asking to change case: ' + message)
-            time_of_last_data = time.time()
-                # try to receive message before timeout
-            rdt.rdt_4_0_send(msg_L)
-            msg_s = rdt.rdt_4_0_receive()
-                    
-            #         #ele nao chega nesse if
-            # if msg_s is None:
-            #     if time_of_last_data + timeout < time.time():
-            #         break
-            #     else:
-            #         continue
-            # time_of_last_data = time.time()
-
-                    # print the result
-            print("converteu")
-            print('Client: Received the converted frase to: ' + msg_s + '\n')
+        print(f"Mandando pedido de conversao da mensagem: {msg_L[0]}")
+        rdt.rdt_4_0_send(msg_L[0])
+        print("converteu")
     
     except (KeyboardInterrupt, SystemExit):
         print("Ending connection...")
