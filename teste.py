@@ -13,3 +13,16 @@ ack_received = {i: 0 for i in range(len(seg_men))}
 
 print(seg_men)
 print(ack_received)
+
+teste = {
+    7: "a",
+    6: "b",
+    9: "c",
+    1: "d"
+}
+
+print(type(sorted(teste)))
+
+seq_rec = [(1, 10), (0, 11), (2, 12)]
+seq_rec_ord = sorted(seq_rec, key=lambda l: l[0])
+print(seq_rec_ord)

@@ -68,7 +68,8 @@ if __name__ == '__main__':
     rdt = RDT.RDT('client', args.server, args.port)
     try:
         print(f"Mandando pedido de conversao da mensagem: {msg_L[0]}")
-        rdt.rdt_4_0_send(msg_L[0])
+        msg = rdt.rdt_4_0_send(msg_L[0])
+        print(msg)
         print("converteu")
     
     except (KeyboardInterrupt, SystemExit):

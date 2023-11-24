@@ -154,15 +154,15 @@ class RDT:
             #debug_log(f"Entrou: {i}")
         #debug_log(f"{len(seg_men)}")
 
+        ack_received = 0
         ack_dict = {i: 0 for i in range(len(seg_men))}
         time_dict = {i: 0 for i in range(len(seg_men))}
         lowest_seq = 0
         window_size = round(len(seg_men) / 2)
-        debug_log(f"Window_size: {window_size}")
 
         msg_rcv = {}
 
-        while len(msg_rcv) != len(seg_men):
+        while ack_received != len(seg_men):
             # Manda os pacotes que nao receberam ACK
             #debug_log(f"{len(seg_men)}")
             for packet in seg_men[lowest_seq : lowest_seq + window_size]:
@@ -173,23 +173,29 @@ class RDT:
                     time.sleep(1)
                     response = self.network.udt_receive()
                     if response != "":
+                        debug_log(response)
                         msg_length = int(response[: Packet.length_S_length])
                         self.byte_buffer = response[msg_length:]
-                        response_p = Packet.from_byte_S(response[:msg_length])
-                        if response_p.msg_S == "1":
-                            debug_log(f"Recebi: ACK: {response_p.seq_num}")
-                            ack_dict[response_p.seq_num] = 1
-                            if response_p.seq_num == lowest_seq:
-                                for key in range(len(seg_men)):
-                                    if not ack_dict[key]:
-                                        lowest_seq = key
-                                        window_change = True
-                                        break
+                        if not Packet.corrupt(response[:msg_length]):
+                            response_p = Packet.from_byte_S(response[:msg_length])
+
+                            if response_p.msg_S == "1":
+                                debug_log(f"Recebi: ACK: {response_p.seq_num}")
+                                if not ack_dict[response_p.seq_num]:
+                                    ack_dict[response_p.seq_num] = 1
+                                    ack_received += 1
+                                if response_p.seq_num == lowest_seq:
+                                    for key in range(len(seg_men)):
+                                        if not ack_dict[key]:
+                                            lowest_seq = key
+                                            window_change = True
+                                            break
+
 
             is_timeout = False
             window_change = False
 
-            while not is_timeout and not window_change:
+            while (not is_timeout and not window_change) and (ack_received != len(seg_men)):
                 # Espera a chegada de ACKs
                 response = self.network.udt_receive()
 
@@ -201,7 +207,7 @@ class RDT:
                     if not ack_dict[key]:
                         if time_dict[key] + self.timeout < timer:
                             is_timeout = True
-                            debug_log(f"timeout, {key}")
+                            debug_log(f"timeout {key}")
 
                 # Reinicia o while se nao tiver chegado a resposta
                 if response == "":
@@ -227,91 +233,151 @@ class RDT:
                                     lowest_seq = key
                                     window_change = True
                                     break  
-                            
-                    # Verifica se a resposta foi NACK
-                    elif response_p.msg_S == "0":
-                        debug_log(f"Recebi: NAK: {response_p.seq_num}")
-                        self.byte_buffer = ""
-                        self.network.udt_send(seg_men[response_p.seq_num].get_byte_S())
-                        time_dict[response_p.seq_num] = time.time()
-                    
-                    # Manda ACK mensagem convertida
-                    else:
-                        debug_log(f"Recebi: Fragmento da Mensagem: {response_p.seq_num}, {response_p.msg_S}")
-                        self.network.udt_send(Packet(response_p.seq_num, "1").get_byte_S())
-                        msg_rcv[response_p.seq_num] = response_p.msg_S
-
-                        
+                # Pacote corrompido
                 else:
                     debug_log("Recebi: Packet corrompido")
                     self.byte_buffer = ""
-        print(msg_rcv)
+        debug_log("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
+        ack_null_char = False
+        null_char_time = 0
 
+        while len(msg_rcv) != ack_received:
+            if not ack_null_char and null_char_time + self.timeout < time.time():
+                self.network.udt_send(Packet(self.seq_num, "\0").get_byte_S())
+                null_char_time = time.time()
+
+            response = self.network.udt_receive()
+
+            if response == '':
+                continue
+
+            msg_length = int(response[: Packet.length_S_length])
+            self.byte_buffer = response[msg_length:]
+
+            if not Packet.corrupt(response):
+                response_p = Packet.from_byte_S(response[:msg_length])
+                if response_p.msg_S == "1":
+                    ack_null_char = True
+                elif response_p.msg_S != "1" or response_p.msg_S != "0":
+                    ack_null_char = True
+                    msg_rcv[response_p.seq_num] = response_p.msg_S
+                    self.network.udt_send(Packet(response_p.seq_num, "1").get_byte_S())
+                    debug_log(f"Recebi: {response_p.msg_S}")
+            else:
+                debug_log(response)
+                debug_log("corrupted")
+
+        msg = ''
+        for key in sorted(msg_rcv):
+            msg += msg_rcv[key]
+        return msg
+    
     def rdt_4_0_receive(self):
         seq_rec = [] # Armazena TUPLA (seq_num, Packet) seq_num = numero de sequencia da chegada
-        seq_sent_ack = {}
-        seq_sent_time = {}
-        lowest_seq = 0
-        window_size = round(len(seq_rec) / 2)
 
-        fin = False
+        null_char = False
         connection_timeout = False
 
-        while not fin and not connection_timeout:
-            for tupla in seq_rec[lowest_seq : lowest_seq + window_size]:
-                if not tupla[0] and (seq_sent_time[tupla[0]] + self.timeout < time.time()):
+        seq_sent_ack = {}
+        seq_sent_time = {}
+
+        while not null_char and not connection_timeout:
+            entry = self.network.udt_receive()
+            if entry == "":
+                continue
+            msg_length = int(entry[: Packet.length_S_length])
+            self.byte_buffer = entry[msg_length:]
+            if not Packet.corrupt(entry):
+                entry_p = Packet.from_byte_S(entry[:msg_length])
+                debug_log(f"Recebi: {entry_p.get_byte_S()}")
+
+                if entry_p.msg_S == "\0":
+                    self.network.udt_send(Packet(1000, "1").get_byte_S())
+                    null_char = True
+                else:
+                    add_seq = True
+                    for i in range(len(seq_rec)):
+                        if seq_rec[i][0] == entry_p.seq_num:
+                            add_seq = False
+                    if add_seq:
+                        seq_rec.append((entry_p.seq_num, Packet(entry_p.seq_num, entry_p.msg_S.upper())))
+                        seq_sent_time[entry_p.seq_num] = 0
+                        seq_sent_ack[entry_p.seq_num] = 0
+                        window_change = True
+                    self.network.udt_send(Packet(entry_p.seq_num, "1").get_byte_S())
+                    #debug_log(seq_rec)
+            else:
+                debug_log("Recebi: Packet Corrompido")
+        debug_log("SAIU.")
+        sleep(1)
+
+        fin = False
+        window_size = round(len(seq_rec) / 2)
+        window_change = False
+        is_timeout = False
+        lowest_seq = 0
+
+        seq_rec_ord = sorted(seq_rec, key=lambda l: l[0])
+        while not fin:
+            timer = time.time()
+            for tupla in seq_rec_ord[lowest_seq:lowest_seq + window_size]:
+                if not seq_sent_ack[tupla[0]] and seq_sent_time[tupla[0]] + self.timeout < timer:
                     self.network.udt_send(tupla[1].get_byte_S())
                     seq_sent_time[tupla[0]] = time.time()
-                    debug(f"Enviando {packet.seq_num}")
-            
-            is_timeout = False
-            window_change = False
+                    debug_log(f"Enviado packet {tupla[0]}, {tupla[1].seq_num}, {tupla[1].msg_S}")
 
-            while not is_timeout and not window_change:
-                entry = self.network.udt_receive()
+                    time.sleep(1)
+                    response = self.network.udt_receive()
 
-                if entry == "":
+                    if response != "":
+                        msg_length = int(response[: Packet.length_S_length])
+                        self.byte_buffer = response[msg_length:]
+                        debug_log(response)
+                        if not Packet.corrupt(response):
+                            msg_length = int(response[: Packet.length_S_length])
+                            self.byte_buffer = response[msg_length:]
+                            response_p = Packet.from_byte_S(response[:msg_length])
+
+                            if response_p.msg_S == "1":
+                                debug_log(f"Recebi: ACK: {response_p.seq_num}")
+                                seq_sent_ack[response_p.seq_num] = 1
+                                debug_log(seq_sent_ack)
+
+                                if response_p.seq_num == lowest_seq:
+                                    for key in range(len(seq_rec_ord)):
+                                        if not seq_sent_ack[key]:
+                                            lowest_seq = key
+                                            debug_log(f"lowest: {lowest_seq}")
+                                            window_change = True
+                                            break       
+
+            while not window_change and not is_timeout:
+                response = self.network.udt_receive()
+                if response == '':
                     continue
 
-                msg_length = int(entry[: Packet.length_S_length])
-                self.byte_buffer = entry[msg_length:]
+                msg_length = int(response[: Packet.length_S_length])
+                self.byte_buffer = response[msg_length:]
 
-                if not Packet.corrupt(entry):
-                    entry_p = Packet.from_byte_S(entry[:msg_length])
-                    debug_log(f"Recebi:, {entry_p}")
+                if not Packet.corrupt(response[msg_length:]):
+                    response_p = Packet.from_byte_S(response[:msg_length])
 
-                    # Recebe ACK
-                    if entry_p.msg_S == "1":
-                        debug_log(f"Recebi: ACK {entry_p.seq_num}")
-                        seq_sent_ack[entry_p.seq_num] = 1
+                    if response_p.msg_S == "1":
+                        debug_log(f"Recebi: ACK: {response_p.seq_num}")
+                        seq_sent_ack[response_p.seq_num] = 1
+                        debug_log(seq_sent_ack)
 
-                        if entry_p.seq_num == lowest_seq:
-                                for key in range(len(seq_rec)):
-                                    if not seq_sent_ack[key]:
-                                        lowest_seq = key
-                                        window_change = True
-                                        break
-
-                    elif entry_p.msg_S == "0":
-                        debug(f"Recebi: NACK: {response_p.seq_num}")
-
-                    # Manda ACK fragmento da mensagem recebida
-                    else:
-                        debug_log(f"Recebi: Fragmento da Mensagem: {entry_p.seq_num}, {entry_p.msg_S}")
-                        add_seq = True
-                        for i in range(len(seq_rec)):
-                            if seq_rec[i][0] == entry_p.seq_num:
-                                add_seq = False
-                        if add_seq:
-                            seq_rec.append((entry_p.seq_num, Packet(entry_p.seq_num, entry_p.msg_S.upper())))
-                        self.network.udt_send(Packet(entry_p.seq_num, "1").get_byte_S())
-
-                        debug_log(seq_rec)
-
+                        if response_p.seq_num == lowest_seq:
+                            for key in range(len(seq_rec_ord)):
+                                if not seq_sent_ack[key]:
+                                    lowest_seq = key
+                                    debug_log(f"lowest: {lowest_seq}")
+                                    window_change = True
+                                    break       
+                
                 else:
-                    debug_log("Recebi: Packet Corrompido")
-
-
+                    debug_log("Corrupted")
+            
 
     def rdt_3_0_receive(self):
         ret_S = None
