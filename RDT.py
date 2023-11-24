@@ -161,15 +161,17 @@ class RDT:
                 #sleep(20)
                 msg_length = int(response[:Packet.length_S_length])
                 self.byte_buffer = response[msg_length:]
-
+                
                 if not Packet.corrupt(response[:msg_length]):
                     response_p = Packet.from_byte_S(response[:msg_length])
-                    if response in self.buffer_send:
+                    debug_log(f"msg rcv == {response_p.msg_S}")
+                    if response_p.msg_S in self.buffer_send:
                         debug_log("SENDER: Receiver behind sender")
                         test = Packet(response_p.seq_num, "1")
                         self.network.udt_send(test.get_byte_S())
                 
                     elif response_p.msg_S is "1":
+                        debug_log("Caiu nesse if")
                         debug_log("SENDER: Received ACK, move on to next.")
                         debug_log("SENDER: Incrementing window from {} to {}".format(
                                 self.seq_num, self.seq_num + 1))
@@ -178,6 +180,7 @@ class RDT:
                         debug_stats(f"Goodput=={(time.time()-t1_send):.2f}[s]")
                         
                     elif response_p.msg_S is "0":
+                        debug_log("Caiu nesse if")
                         debug_log("SENDER: NAK received")
                         self.byte_buffer = ''
                 
@@ -185,6 +188,7 @@ class RDT:
                     debug_log("SENDER: Corrupted ACK")
                     self.byte_buffer = ''
                 
+                debug_log(f"send_buffer=={self.buffer_send}")
                 debug_stats(f"Throughput=={(time.time()-t1_send):.2f}[s]")
                 self.network.buffer_S = ''
                 self.byte_buffer = ''
