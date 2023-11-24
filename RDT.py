@@ -91,7 +91,7 @@ class RDT:
     seq_num = 0
     # buffer of bytes read from network
     byte_buffer = ""
-    timeout = 5
+    timeout = 10
 
     def __init__(self, role_S, server_S, port):
         self.network = Network.NetworkLayer(role_S, server_S, port)
@@ -170,6 +170,21 @@ class RDT:
                     self.network.udt_send(packet.get_byte_S())
                     debug_log(f"Packet {packet.seq_num} mandado")
                     time_dict[packet.seq_num] = time.time()
+                    time.sleep(1)
+                    response = self.network.udt_receive()
+                    if response != "":
+                        msg_length = int(response[: Packet.length_S_length])
+                        self.byte_buffer = response[msg_length:]
+                        response_p = Packet.from_byte_S(response[:msg_length])
+                        if response_p.msg_S == "1":
+                            debug_log(f"Recebi: ACK: {response_p.seq_num}")
+                            ack_dict[response_p.seq_num] = 1
+                            if response_p.seq_num == lowest_seq:
+                                for key in range(len(seg_men)):
+                                    if not ack_dict[key]:
+                                        lowest_seq = key
+                                        window_change = True
+                                        break
 
             is_timeout = False
             window_change = False
@@ -180,12 +195,13 @@ class RDT:
 
                 # Verifica se algum pacote estourou o timer
                 timer = time.time()
-                for key in range(lowest_seq, lowest_seq + window_size):
+                for key in list(ack_dict.keys())[lowest_seq: lowest_seq + window_size]:
                     #debug_log(key)
                     #debug_log(f"{time_dict[key] + self.timeout < timer}")
-                    if time_dict[key] + self.timeout < timer:
-                        is_timeout = True
-                        debug_log("timeout")
+                    if not ack_dict[key]:
+                        if time_dict[key] + self.timeout < timer:
+                            is_timeout = True
+                            debug_log(f"timeout, {key}")
 
                 # Reinicia o while se nao tiver chegado a resposta
                 if response == "":
@@ -222,7 +238,7 @@ class RDT:
                     # Manda ACK mensagem convertida
                     else:
                         debug_log(f"Recebi: Fragmento da Mensagem: {response_p.seq_num}, {response_p.msg_S}")
-                        self.network.udt_send(Packet(response_p.seq_num, "1"))
+                        self.network.udt_send(Packet(response_p.seq_num, "1").get_byte_S())
                         msg_rcv[response_p.seq_num] = response_p.msg_S
 
                         
@@ -242,10 +258,11 @@ class RDT:
         connection_timeout = False
 
         while not fin and not connection_timeout:
-            for packet in seq_rec[lowest_seq : lowest_seq + window_size]:
-                if not seq_sent_ack[packet.seq_num] and (seq_sent_time[packet.seq_num] + self.timeout < time.time()):
-                    self.network.udt_send(packet.get_byte_S())
-                    seq_sent_time[packet.seq_num] = time.time()
+            for tupla in seq_rec[lowest_seq : lowest_seq + window_size]:
+                if not tupla[0] and (seq_sent_time[tupla[0]] + self.timeout < time.time()):
+                    self.network.udt_send(tupla[1].get_byte_S())
+                    seq_sent_time[tupla[0]] = time.time()
+                    debug(f"Enviando {packet.seq_num}")
             
             is_timeout = False
             window_change = False
@@ -255,8 +272,6 @@ class RDT:
 
                 if entry == "":
                     continue
-
-                debug_log(f"Recebi:, {entry}")
 
                 msg_length = int(entry[: Packet.length_S_length])
                 self.byte_buffer = entry[msg_length:]
@@ -283,8 +298,14 @@ class RDT:
                     # Manda ACK fragmento da mensagem recebida
                     else:
                         debug_log(f"Recebi: Fragmento da Mensagem: {entry_p.seq_num}, {entry_p.msg_S}")
-                        self.network.udt_send(Packet(entry_p.seq_num, "1"))
-                        seq_rec.append((entry_p.seq_num, Packet(entry_p.seq_num, entry_p.msg_S.upper())))
+                        add_seq = True
+                        for i in range(len(seq_rec)):
+                            if seq_rec[i][0] == entry_p.seq_num:
+                                add_seq = False
+                        if add_seq:
+                            seq_rec.append((entry_p.seq_num, Packet(entry_p.seq_num, entry_p.msg_S.upper())))
+                        self.network.udt_send(Packet(entry_p.seq_num, "1").get_byte_S())
+
                         debug_log(seq_rec)
 
                 else:

@@ -65,7 +65,6 @@ if __name__ == '__main__':
         'The computer was born to solve problems that did not exist before. - Bill Gates']
 
     timeout = 1000  # send the next message if not response
-    print("a")
     rdt = RDT.RDT('client', args.server, args.port)
     try:
         print(f"Mandando pedido de conversao da mensagem: {msg_L[0]}")
