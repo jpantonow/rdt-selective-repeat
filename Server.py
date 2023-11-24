@@ -12,7 +12,7 @@ if __name__ == '__main__':
     parser.add_argument('port', help='Port.', type=int)
     args = parser.parse_args()
 
-    timeout = 5000  # close connection if no new data within 5 seconds
+    timeout = 1000  # close connection if no new data within 5 seconds
     lista = []
     rdt = RDT.RDT('server', None, args.port)
     try:

@@ -12,6 +12,9 @@ def debug_log(message):
     if debug:
         print(message)
 
+def debug_stats(message):
+    if debug:
+        print("\033[1;32m" + message + "\033[0m")
 
 class Packet:
     # the number of bytes used to store packet length
@@ -145,6 +148,7 @@ class RDT:
             debug_log(f"packet transmiting -> {packet.msg_S}")
             
             while(packet.msg_S not in self.buffer_send):
+                t1_send = time.time()
                 self.network.udt_send(packet.get_byte_S())
                 response = ''
                 timer = time.time()
@@ -171,6 +175,7 @@ class RDT:
                                 self.seq_num, self.seq_num + 1))
                         self.seq_num += 1
                         self.buffer_send.append(packet.msg_S)
+                        debug_stats(f"Goodput=={(time.time()-t1_send):.2f}[s]")
                         
                     elif response_p.msg_S is "0":
                         debug_log("SENDER: NAK received")
@@ -180,6 +185,7 @@ class RDT:
                     debug_log("SENDER: Corrupted ACK")
                     self.byte_buffer = ''
                 
+                debug_stats(f"Throughput=={(time.time()-t1_send):.2f}[s]")
                 self.network.buffer_S = ''
                 self.byte_buffer = ''
                 break

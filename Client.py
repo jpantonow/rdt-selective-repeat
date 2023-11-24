@@ -58,8 +58,8 @@ if __name__ == '__main__':
     messages = []
 
     msg_L = [
-    	'The art of debugging is figuring out what you really told your program to do rather than what you thought you told it to do. -- Andrew Singer', 
-    	'The good news about computers is that they do what you tell them to do. The bad news is that they do what you tell them to do. -- Ted Nelson', 
+    	'Microsoft is not evil, they just make really crappy operating systems - Linus Torvalds', 
+    	'Real programmers can write assembly code in any language - Larry Wall', 
     	'It is hardware that makes a machine fast. It is software that makes a fast machine slow. -- Craig Bruce',
         'The art of debugging is figuring out what you really told your program to do rather than what you thought you told it to do. -- Andrew Singer',
         'The computer was born to solve problems that did not exist before. - Bill Gates']
@@ -69,7 +69,6 @@ if __name__ == '__main__':
     timeout = 1000  # send the next message if not response
     rdt = RDT.RDT('client', args.server, args.port)
     try:
-        t1 = time.time()
         for msg_L in messages:
             for message in msg_L:
                     time_of_last_data = time.time()
@@ -79,8 +78,6 @@ if __name__ == '__main__':
             rdt.rdt_4_0_send(msg_L)
             rdt.clear()
             #dar um jeito de imprimir as mensagens
-        t2 = time.time()
-        print(f"Goodput=={(t1-t2):.2f}[s]")
     except (KeyboardInterrupt, SystemExit):
         print("Ending connection...")
     except (BrokenPipeError, ConnectionAbortedError, ConnectionResetError):
