@@ -5,7 +5,7 @@
 ## Invocação do Programa
 ### Basta executar:
 #### python3 server.py 5000
-#### python3 client.py localhost 5000
+#### python3 client.py localhost 5000 1
 
 ## Decisões de Projeto
 ### Implementação do Selective-Repeat
