@@ -243,26 +243,6 @@ class RDT:
         return ret_S
 
 
-# if __name__ == '__main__':
-#     parser = argparse.ArgumentParser(description='RDT implementation.')
-#     parser.add_argument('role', help='Role is either client or server.', choices=['client', 'server'])
-#     parser.add_argument('server', help='Server.')
-#     parser.add_argument('port', help='Port.', type=int)
-#     args = parser.parse_args()
-
-#     rdt = RDT(args.role, args.server, args.port)
-#     if args.role == 'client':
-#         rdt.rdt_3_0_send('MSG_FROM_CLIENT')
-#         sleep(2)
-#         print(rdt.rdt_3_0_receive())
-#         rdt.disconnect()
-
-
-#     else:
-#         sleep(1)
-#         print(rdt.rdt_3_0_receive())
-#         rdt.rdt_3_0_send('MSG_FROM_SERVER')
-#         rdt.disconnect()
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='RDT implementation.')
@@ -283,14 +263,3 @@ if __name__ == '__main__':
         rdt.rdt_4_0_send('MSG_FROM_SERVER')
         rdt.disconnect()
 
-# Step 1 − Frame 0 sends from sender to receiver and set timer.
-
-# Step 2 − Without waiting for acknowledgement from the receiver another frame, Frame1 is sent by sender by setting the timer for it.
-
-# Step 3 − In the same way frame2 is also sent to the receiver by setting the timer without waiting for previous acknowledgement.
-
-# Step 4 − Whenever sender receives the ACK0 from receiver, within the frame 0 timer then it is closed and sent to the next frame, frame 3.
-
-# Step 5 − whenever the sender receives the ACK1 from the receiver, within the frame 1 timer then it is closed and sent to the next frame, frame 4.
-
-# Step 6 − If the sender doesn’t receive the ACK2 from the receiver within the time slot, it declares timeout for frame 2 and resends the frame 2 again, because it thought the frame2 may be lost or damaged.
