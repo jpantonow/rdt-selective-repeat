@@ -37,6 +37,9 @@ if __name__ == '__main__':
             time_of_last_data = time.time()
                 # try to receive message before timeout
             rdt.rdt_4_0_send(msg_L)
+            print("Messages converted for client:")
+            for i in rdt.buffer_send:
+                print(i)
             rdt.clear()
         debug_stats(f"Simulation time = {(time.time()-begin):.2f}[s]")
         

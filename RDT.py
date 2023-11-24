@@ -83,6 +83,7 @@ class RDT:
         self.packets = []
         self.buffer_send = []
         self.buffer_rcv = []
+        self.window = []
         
     def check_buffer(self,buffer):
         for i in range(0,len(buffer)-1):
@@ -138,16 +139,23 @@ class RDT:
         msg_acks = []
         packets = []
         iterator = 0
-        packtime = {}
+        pack_ack = {}
         self.seq_num = 0
         for msg_S in msg_L:
             packets.append(Packet((self.seq_num+iterator),msg_S))
             iterator += 1
         
+        self.window_size = round(len(packets)/2)
+        
+        self.window = packets[self.seq_num:self.window_size]
+        
+        debug_log(f"janela=={self.window}")
+        
         for packet in packets:
             debug_log(f"packet transmiting -> {packet.msg_S}")
             
-            while(packet.msg_S not in self.buffer_send):
+            while(packet.msg_S not in pack_ack):
+                debug_log(f"pack_ack=={pack_ack}")
                 t1_send = time.time()
                 self.network.udt_send(packet.get_byte_S())
                 response = ''
@@ -163,24 +171,33 @@ class RDT:
                 self.byte_buffer = response[msg_length:]
                 
                 if not Packet.corrupt(response[:msg_length]):
+                    debug_log("pacote nao corrompido")
                     response_p = Packet.from_byte_S(response[:msg_length])
                     debug_log(f"msg rcv == {response_p.msg_S}")
-                    if response_p.msg_S in self.buffer_send:
-                        debug_log("SENDER: Receiver behind sender")
-                        test = Packet(response_p.seq_num, "1")
-                        self.network.udt_send(test.get_byte_S())
+                    debug_log(f"packet.msg_S == {packet.msg_S}")
+                    if packet.msg_S in pack_ack:
+                        if(pack_ack[packet.msg_S]=="1"):
+                            debug_log("SENDER: Receiver behind sender")
+                            test = Packet(response_p.seq_num,"1")
+                            self.network.udt_send(test.get_byte_S())
+                        
+                    # if response_p.msg_S in self.buffer_send:
+                    #     debug_log("SENDER: Receiver behind sender")
+                    #     test = Packet(response_p.seq_num, "1")
+                    #     self.network.udt_send(test.get_byte_S())
                 
-                    elif response_p.msg_S is "1":
-                        debug_log("Caiu nesse if")
+                    elif (response_p.msg_S is "1") or (response_p.msg_S==packet.msg_S.upper()):
+                        debug_log("pacote novo")
                         debug_log("SENDER: Received ACK, move on to next.")
                         debug_log("SENDER: Incrementing window from {} to {}".format(
                                 self.seq_num, self.seq_num + 1))
                         self.seq_num += 1
-                        self.buffer_send.append(packet.msg_S)
+                        pack_ack[packet.msg_S] = response_p.msg_S
+                        self.buffer_send.append(response_p.msg_S)
                         debug_stats(f"Goodput=={(time.time()-t1_send):.2f}[s]")
                         
                     elif response_p.msg_S is "0":
-                        debug_log("Caiu nesse if")
+                        debug_log("nak")
                         debug_log("SENDER: NAK received")
                         self.byte_buffer = ''
                 
@@ -190,9 +207,11 @@ class RDT:
                 
                 debug_log(f"send_buffer=={self.buffer_send}")
                 debug_stats(f"Throughput=={(time.time()-t1_send):.2f}[s]")
+                debug_log(f"pack_ack=={pack_ack}")
                 self.network.buffer_S = ''
                 self.byte_buffer = ''
                 break
+        
             
     def rdt_4_0_receive(self):
         #ver a parada dos buffers no rdt_4_0_receive
