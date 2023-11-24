@@ -188,6 +188,7 @@ class RDT:
                 
                     elif (response_p.msg_S is "1") or (response_p.msg_S==packet.msg_S.upper()):
                         debug_log("pacote novo")
+                        
                         debug_log("SENDER: Received ACK, move on to next.")
                         debug_log("SENDER: Incrementing window from {} to {}".format(
                                 self.seq_num, self.seq_num + 1))
@@ -220,9 +221,8 @@ class RDT:
         byte_S = self.network.udt_receive()
         self.byte_buffer += byte_S
         current_seq = self.seq_num
-        # Don't move on until seq_num has been toggled
         # keep extracting packets - if reordered, could get more than one
-        while current_seq == self.seq_num:
+        while True:
             # check if we have received enough bytes
             if len(self.byte_buffer) < Packet.length_S_length:
                 break  # not enough bytes to read packet length
@@ -243,7 +243,7 @@ class RDT:
                 # Check packet
                 if p.is_ack_pack():
                     self.byte_buffer = self.byte_buffer[length:]
-                    continue
+                    break
                 if p.seq_num < self.seq_num:
                     debug_log('RECEIVER: Already received packet.  ACK(n) again.')
                     # Send another ACK
