@@ -1,53 +1,38 @@
 import argparse
 import RDT
 import time
-from time import sleep
 
-# if __name__ == '__main__':
-#     parser = argparse.ArgumentParser(description='UPPER CASE server.')
-#     parser.add_argument('port', help='Port.', type=int)
-#     args = parser.parse_args()
-
-#     timeout = 1000  # close connection if no new data within 5 seconds
-#     time_of_last_data = time.time()
-
-#     rdt = RDT.RDT('server', None, args.port)
-#     try:
-#         while True:
-#             # try to receiver message before timeout
-#             msg_S = rdt.rdt_3_0_receive()
-#             if msg_S is None:
-#                 if time_of_last_data + timeout < time.time():
-#                     break
-#                 else:
-#                     continue
-#             time_of_last_data = time.time()
-
-#             # convert and reply
-#             rep_msg_S = upperCase(msg_S)
-#             print('Serer: converted %s \nto %s\n' % (msg_S, rep_msg_S))
-#             rdt.rdt_3_0_send(rep_msg_S)
-#     except (KeyboardInterrupt, SystemExit):
-#         print("Ending connection...")
-#     except (BrokenPipeError, ConnectionAbortedError, ConnectionResetError):
-#         print("Ending connection...")
-#     finally:
-#         rdt.disconnect()
-#         print("Connection ended.")
-
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='UPPER CASE server.')
-    parser.add_argument('port', help='Port.', type=int)
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="UPPER CASE server.")
+    parser.add_argument("port", help="Port.", type=int)
     args = parser.parse_args()
 
-    timeout = 5000  # close connection if no new data within 5 seconds
-    lista = []
-    rdt = RDT.RDT('server', None, args.port)
+    rdt = RDT.RDT("server", None, args.port)
     try:
         while True:
-            # try to receiver message before timeout
-            rdt.rdt_4_0_receive()
-                
+            # Receber packets
+            seg_msg_rcv = rdt.rdt_4_0_receive()
+
+            # Converter mensagem
+            msg = ""
+            for key in list(sorted(seg_msg_rcv)):
+                msg += seg_msg_rcv[key]
+
+            # Enviar segmentos da mensagem convertida
+            seg_men = []
+            for i in range(0, len(msg), 10):
+                seg_men.append(msg[i : i + 10])
+            time.sleep(1)
+            if msg != "":
+                print("Enviando os segmentos convertidos.")
+                rdt.rdt_4_0_send(seg_men)
+
+                # Sinalizar fim da entrega de segmentos
+                print("Sinalizar o fim da entrega dos segmentos.")
+                rdt.sinalizar_fim_entrega("server")
+            else:
+                break
+
     except (KeyboardInterrupt, SystemExit):
         print("Ending connection...")
     except (BrokenPipeError, ConnectionAbortedError, ConnectionResetError):

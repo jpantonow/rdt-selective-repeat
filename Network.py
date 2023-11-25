@@ -16,7 +16,7 @@ class NetworkLayer:
     # class variables
     sock = None
     conn = None
-    buffer_S = ''
+    buffer_S = ""
     lock = threading.Lock()
     collect_thread = None
     stop = None
@@ -25,22 +25,22 @@ class NetworkLayer:
     throughput = 0
 
     def __init__(self, role_S, server_S, port):
-        if role_S == 'client':
-            print('Network: role is client')
+        if role_S == "client":
+            print("Network: role is client")
             self.conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.conn.connect((server_S, port))
             self.conn.settimeout(self.socket_timeout)
 
-        elif role_S == 'server':
-            print('Network: role is server')
+        elif role_S == "server":
+            print("Network: role is server")
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.sock.bind(('', port))
+            self.sock.bind(("", port))
             self.sock.listen(1)
             self.conn, addr = self.sock.accept()
             self.conn.settimeout(self.socket_timeout)
 
         # start the thread to receive data on the connection
-        self.collect_thread = threading.Thread(name='Collector', target=self.collect)
+        self.collect_thread = threading.Thread(name="Collector", target=self.collect)
         self.stop = False
         self.collect_thread.start()
 
@@ -50,14 +50,16 @@ class NetworkLayer:
             self.collect_thread.join()
 
     def __del__(self):
-        if self.sock is not None: self.sock.close()
-        if self.conn is not None: self.conn.close()
+        if self.sock is not None:
+            self.sock.close()
+        if self.conn is not None:
+            self.conn.close()
 
-    def udt_send_list(self,listMsg_S):
-        if(listMsg_S):
+    def udt_send_list(self, listMsg_S):
+        if listMsg_S:
             for msg in listMsg_S:
                 self.udt_send(msg)
-                
+
     def udt_send(self, msg_S):
         # return without sending if the packet is being dropped
         if random.random() < self.prob_pkt_loss:
@@ -66,8 +68,8 @@ class NetworkLayer:
         if random.random() < self.prob_byte_corr:
             start = random.randint(RDT.Packet.length_S_length, len(msg_S) - 5)
             num = random.randint(1, 5)
-            repl_S = ''.join(random.sample('XXXXX', num))  # sample length >= num
-            msg_S = msg_S[:start] + repl_S + msg_S[start + num:]
+            repl_S = "".join(random.sample("XXXXX", num))  # sample length >= num
+            msg_S = msg_S[:start] + repl_S + msg_S[start + num :]
         # reorder packets - either hold a packet back, or if one held back then send both
         if random.random() < self.prob_pkt_reorder or self.reorder_msg_S:
             if self.reorder_msg_S is None:
@@ -80,7 +82,7 @@ class NetworkLayer:
         # keep calling send until all the bytes are transferred
         totalsent = 0
         while totalsent < len(msg_S):
-            sent = self.conn.send(msg_S[totalsent:].encode('utf-8'))
+            sent = self.conn.send(msg_S[totalsent:].encode("utf-8"))
             if sent == 0:
                 raise RuntimeError("socket connection broken")
             totalsent = totalsent + sent
@@ -88,11 +90,11 @@ class NetworkLayer:
     ## Receive data from the network and save in internal buffer
     def collect(self):
         #         print (threading.currentThread().getName() + ': Starting')
-        while (True):
+        while True:
             try:
                 recv_bytes = self.conn.recv(2048)
                 with self.lock:
-                    self.buffer_S += recv_bytes.decode('utf-8')
+                    self.buffer_S += recv_bytes.decode("utf-8")
             except BlockingIOError as err:
                 pass
             except socket.timeout as err:
@@ -105,19 +107,22 @@ class NetworkLayer:
     def udt_receive(self):
         with self.lock:
             ret_S = self.buffer_S
-            self.buffer_S = ''
+            self.buffer_S = ""
         return ret_S
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Network layer implementation.')
-    parser.add_argument('role', help='Role is either client or server.', choices=['client', 'server'])
-    parser.add_argument('server', help='Server.')
-    parser.add_argument('port', help='Port.', type=int)
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Network layer implementation.")
+    parser.add_argument(
+        "role", help="Role is either client or server.", choices=["client", "server"]
+    )
+    parser.add_argument("server", help="Server.")
+    parser.add_argument("port", help="Port.", type=int)
     args = parser.parse_args()
 
     network = NetworkLayer(args.role, args.server, args.port)
-    if args.role == 'client':
-        network.udt_send('MSG_FROM_CLIENT')
+    if args.role == "client":
+        network.udt_send("MSG_FROM_CLIENT")
         sleep(2)
         print(network.udt_receive())
         network.disconnect()
@@ -125,9 +130,5 @@ if __name__ == '__main__':
     else:
         sleep(1)
         print(network.udt_receive())
-        network.udt_send('MSG_FROM_SERVER')
+        network.udt_send("MSG_FROM_SERVER")
         network.disconnect()
-
-
-
-
