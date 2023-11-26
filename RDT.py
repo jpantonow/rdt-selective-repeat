@@ -92,6 +92,7 @@ class RDT:
         self.buffer_send = []
         self.buffer_rcv = []
         self.window = []
+        self.pack_msg = {}
         self.pack_ack = {}
 
     def check_buffer(self, buffer):
@@ -175,7 +176,6 @@ class RDT:
                     continue
 
                 debug_log("SENDER: " + response)
-                sleep(4)
                 msg_length = int(response[:Packet.length_S_length])
                 self.byte_buffer = response[msg_length:]
 
@@ -187,7 +187,6 @@ class RDT:
                     debug_log(f"packet.seq == {packet.seq_num}")
                     debug_log(f"response.seq == {response_p.msg_S}")
                     debug_log(f"response.msg == {response_p.msg_S}")    
-                    sleep(2)
                     if packet.seq_num in pack_ack:
                         if (pack_ack[packet.seq_num] == "1"):
                             debug_log("SENDER: Receiver behind sender")
@@ -208,7 +207,6 @@ class RDT:
 
                     elif response_p.msg_S is "0":
                         debug_log("SENDER: NAK received")
-                        sleep(2)
                         self.byte_buffer = ''
 
                     else:
@@ -221,7 +219,8 @@ class RDT:
                     self.byte_buffer = ''
         self.network.udt_send(Packet(100000,"@").get_byte_S())
         self.pack_ack = pack_ack
-
+        self.packets = packets
+        
     def rdt_4_0_receive(self):
         # ver a parada dos buffers no rdt_4_0_receive
         self.byte_buffer = ''
@@ -230,7 +229,7 @@ class RDT:
         ret_S = None
         byte_S = self.network.udt_receive()
         self.byte_buffer += byte_S
-        
+        debug_log(f"packack=={pack_ack}")
         # keep extracting packets - if reordered, could get more than one
         while True:
             # check if we have received enough bytes
@@ -259,7 +258,7 @@ class RDT:
                     answer = Packet(p.seq_num, "1")
                     self.network.udt_send(answer.get_byte_S())
 
-                elif p.msg_S not in pack_ack:
+                else:
                     debug_log(
                         'RECEIVER: Received new.  Send ACK(n).')
                     # SEND ACK
