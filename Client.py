@@ -44,7 +44,7 @@ if __name__ == '__main__':
             while(len(msg_L) != len(msg_convertidas)):
                 msg_S = None
                 while msg_S == None:
-                    msg_S = rdt.rdt_4_0_receive()
+                    (_,msg_S) = rdt.rdt_4_0_receive()
                     if msg_S is None:
                         if time_of_last_data + timeout < time.time():
                             break

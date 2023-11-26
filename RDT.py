@@ -197,6 +197,7 @@ class RDT:
                         debug_log("pacote novo")
                         debug_log("ack recebido")
                         pack_ack[packet.seq_num] = response_p.msg_S
+                        self.pack_msg[packet.msg_S] = response_p.msg_S
                         debug_stats(f"Goodput=={(time.time()-t1_send):.2f}[s]")
                         debug_log(f"response_p.seqnum={response_p.seq_num}, packets[lowest_seq].seq_num = {packets[lowest_seq].seq_num}")
                         if response_p.seq_num == packets[lowest_seq].seq_num:
@@ -227,9 +228,9 @@ class RDT:
         #pack_ack = {}
         pack_ack = self.pack_ack
         ret_S = None
+        ret_seq = None
         byte_S = self.network.udt_receive()
         self.byte_buffer += byte_S
-        debug_log(f"packack=={pack_ack}")
         # keep extracting packets - if reordered, could get more than one
         while True:
             # check if we have received enough bytes
@@ -267,17 +268,18 @@ class RDT:
                     pack_ack[p.seq_num] = "1"
                 # Add contents to return string
                 ret_S = p.msg_S if (ret_S is None) else ret_S + p.msg_S
+                ret_seq = p.seq_num if(ret_seq is None) else ret_seq + p.seq_num
                 # remove the packet bytes from the buffer
                 self.byte_buffer = self.byte_buffer[length:]
                 # if this was the last packet, will return on the next iteration
-                if(p.msg_S in pack_ack):
-                    break
+                # if(p.msg_S in pack_ack):
+                #     break
             # remove the packet bytes from the buffer
             self.byte_buffer = self.byte_buffer[length:]
             # if this was the last packet, will return on the next iteration
         if (ret_S):
             debug_log(f"RECEIVER: recv = {ret_S}")
-        return ret_S
+        return (ret_seq,ret_S)
 
 
 if __name__ == '__main__':
