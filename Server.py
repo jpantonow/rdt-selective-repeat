@@ -25,7 +25,7 @@ if __name__ == '__main__':
                     break
                 else:
                     continue
-            if(msg_L=="@"):
+            if(msg_L=="\0"):
                 print("Server: special message to stop converting")
                 break
             time_of_last_data = time.time()

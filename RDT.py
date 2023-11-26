@@ -109,6 +109,9 @@ class RDT:
         self.packets = []
         self.buffer_send = []
         self.buffer_rcv = []
+        self.pack_ack = {}
+        self.pack_msg = {}
+        self.window = []
 
     def set_window_size(self, number):
         self.window_size = number
@@ -218,7 +221,45 @@ class RDT:
                     debug_log(f"pack_ack=={pack_ack}")
                     self.network.buffer_S = ''
                     self.byte_buffer = ''
-        self.network.udt_send(Packet(100000,"@").get_byte_S())
+        
+        self.byte_buffer = ''
+        self.network.buffer_S = ''
+        while True:
+                self.network.udt_send(Packet(100000,"\0").get_byte_S())    
+                response = ''
+                timer = time.time()
+
+                while response == '' and (timer + self.timeout > time.time()):
+                    response = self.network.udt_receive()
+                    
+                if response == '':
+                    continue
+
+                msg_length = int(response[:Packet.length_S_length])
+                self.byte_buffer = response[msg_length:]
+
+                if not Packet.corrupt(response[:msg_length]):
+                    response_p = Packet.from_byte_S(response[:msg_length])
+
+                    if (response_p.msg_S is "1"):
+                        debug_log("pacote novo")
+                        debug_log("ack recebido")
+                        debug_stats(f"Goodput=={(time.time()-t1_send):.2f}[s]")
+                        debug_log(f"response_p.seqnum={response_p.seq_num}, packets[lowest_seq].seq_num = {packets[lowest_seq].seq_num}")
+                        break
+
+                    elif response_p.msg_S is "0":
+                        debug_log("SENDER: NAK received")
+                        self.byte_buffer = ''
+
+                    else:
+                        debug_log("SENDER: Corrupted ACK")
+                        self.byte_buffer = ''
+
+                    debug_stats(f"Throughput=={(time.time()-t1_send):.2f}[s]")
+                    debug_log(f"pack_ack=={pack_ack}")
+                    self.network.buffer_S = ''
+                    self.byte_buffer = ''
         self.pack_ack = pack_ack
         self.packets = packets
         
