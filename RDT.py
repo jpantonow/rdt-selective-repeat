@@ -162,9 +162,6 @@ class RDT:
             for packet in packets[lowest_seq : lowest_seq + self.window_size]:
                 debug_log(f"packet transmiting -> {packet.msg_S}")
                 debug_log(f"pack_ack=={pack_ack}")
-                debug_log(packets[lowest_seq])
-                debug_log(lowest_seq)
-                debug_log(lowest_seq + self.window_size)
                 t1_send = time.time()
                 self.network.udt_send(packet.get_byte_S())
                 response = ''
@@ -185,7 +182,10 @@ class RDT:
                     response_p = Packet.from_byte_S(response[:msg_length])
                     debug_log(f"msg rcv == {response_p.msg_S}")
                     debug_log(f"packet.msg_S == {packet.msg_S}")
-                        
+                    debug_log(f"packet.seq == {packet.seq_num}")
+                    debug_log(f"response.seq == {response_p.msg_S}")
+                    debug_log(f"response.msg == {response_p.msg_S}")    
+
                     if packet.seq_num in pack_ack:
                         if (pack_ack[packet.seq_num] == "1"):
                             debug_log("SENDER: Receiver behind sender")
@@ -262,7 +262,7 @@ class RDT:
                     debug_log(
                         'RECEIVER: Received new.  Send ACK(n).')
                     # SEND ACK
-                    answer = Packet(self.seq_num, "1")
+                    answer = Packet(p.seq_num, "1")
                     self.network.udt_send(answer.get_byte_S())
                     pack_ack[p.msg_S] = "1"
                 # Add contents to return string
