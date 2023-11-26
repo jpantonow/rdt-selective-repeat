@@ -109,6 +109,9 @@ class RDT:
         self.packets = []
         self.buffer_send = []
         self.buffer_rcv = []
+        self.pack_ack = {}
+        self.pack_msg = {}
+        self.window = []
 
     def set_window_size(self, number):
         self.window_size = number
@@ -197,6 +200,7 @@ class RDT:
                         debug_log("pacote novo")
                         debug_log("ack recebido")
                         pack_ack[packet.seq_num] = response_p.msg_S
+                        self.pack_msg[packet.msg_S] = response_p.msg_S
                         debug_stats(f"Goodput=={(time.time()-t1_send):.2f}[s]")
                         debug_log(f"response_p.seqnum={response_p.seq_num}, packets[lowest_seq].seq_num = {packets[lowest_seq].seq_num}")
                         if response_p.seq_num == packets[lowest_seq].seq_num:
@@ -217,7 +221,45 @@ class RDT:
                     debug_log(f"pack_ack=={pack_ack}")
                     self.network.buffer_S = ''
                     self.byte_buffer = ''
-        self.network.udt_send(Packet(100000,"@").get_byte_S())
+        
+        self.byte_buffer = ''
+        self.network.buffer_S = ''
+        while True:
+                self.network.udt_send(Packet(100000,"\0").get_byte_S())    
+                response = ''
+                timer = time.time()
+
+                while response == '' and (timer + self.timeout > time.time()):
+                    response = self.network.udt_receive()
+                    
+                if response == '':
+                    continue
+
+                msg_length = int(response[:Packet.length_S_length])
+                self.byte_buffer = response[msg_length:]
+
+                if not Packet.corrupt(response[:msg_length]):
+                    response_p = Packet.from_byte_S(response[:msg_length])
+
+                    if (response_p.msg_S is "1"):
+                        debug_log("pacote novo")
+                        debug_log("ack recebido")
+                        debug_stats(f"Goodput=={(time.time()-t1_send):.2f}[s]")
+                        debug_log(f"response_p.seqnum={response_p.seq_num}, packets[lowest_seq].seq_num = {packets[lowest_seq].seq_num}")
+                        break
+
+                    elif response_p.msg_S is "0":
+                        debug_log("SENDER: NAK received")
+                        self.byte_buffer = ''
+
+                    else:
+                        debug_log("SENDER: Corrupted ACK")
+                        self.byte_buffer = ''
+
+                    debug_stats(f"Throughput=={(time.time()-t1_send):.2f}[s]")
+                    debug_log(f"pack_ack=={pack_ack}")
+                    self.network.buffer_S = ''
+                    self.byte_buffer = ''
         self.pack_ack = pack_ack
         self.packets = packets
         
@@ -227,9 +269,9 @@ class RDT:
         #pack_ack = {}
         pack_ack = self.pack_ack
         ret_S = None
+        ret_seq = None
         byte_S = self.network.udt_receive()
         self.byte_buffer += byte_S
-        debug_log(f"packack=={pack_ack}")
         # keep extracting packets - if reordered, could get more than one
         while True:
             # check if we have received enough bytes
@@ -267,17 +309,18 @@ class RDT:
                     pack_ack[p.seq_num] = "1"
                 # Add contents to return string
                 ret_S = p.msg_S if (ret_S is None) else ret_S + p.msg_S
+                ret_seq = p.seq_num if(ret_seq is None) else ret_seq + p.seq_num
                 # remove the packet bytes from the buffer
                 self.byte_buffer = self.byte_buffer[length:]
                 # if this was the last packet, will return on the next iteration
-                if(p.msg_S in pack_ack):
-                    break
+                # if(p.msg_S in pack_ack):
+                #     break
             # remove the packet bytes from the buffer
             self.byte_buffer = self.byte_buffer[length:]
             # if this was the last packet, will return on the next iteration
         if (ret_S):
             debug_log(f"RECEIVER: recv = {ret_S}")
-        return ret_S
+        return (ret_seq,ret_S)
 
 
 if __name__ == '__main__':

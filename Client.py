@@ -28,6 +28,7 @@ if __name__ == '__main__':
         messages.append(msg_L)
     timeout = 1000  # send the next message if not response
     rdt = RDT.RDT('client', args.server, args.port)
+    in_order = {}
     try:
         begin = time.time()
         for msg_L in messages:
@@ -38,13 +39,14 @@ if __name__ == '__main__':
                 # try to receive message before timeout
             rdt.rdt_4_0_send(msg_L)
             rdt.clear()
-            msg_convertidas = []
+  
         # try to receive message before timeout
             print("Client: receiving messages")
-            while(len(msg_L) != len(msg_convertidas)):
+            while(len(msg_L) != len(in_order)):
                 msg_S = None
+                msg_seq = None
                 while msg_S == None:
-                    msg_S = rdt.rdt_4_0_receive()
+                    (msg_seq,msg_S) = rdt.rdt_4_0_receive()
                     if msg_S is None:
                         if time_of_last_data + timeout < time.time():
                             break
@@ -53,8 +55,10 @@ if __name__ == '__main__':
                 time_of_last_data = time.time()
 
                 # print the result
-                if msg_S:
-                    msg_convertidas.append(msg_S)
+                if msg_seq not in in_order:
+                    in_order[msg_seq] = msg_S
+            msg_convertidas = [in_order[key] for key in sorted(in_order.keys())]
+            print(msg_convertidas)          
             for msg_S in msg_convertidas:
                 print('Client: Received the converted frase to: ' + msg_S + '\n')
         debug_stats(f"Simulation time = {(time.time()-begin):.2f}[s]")
