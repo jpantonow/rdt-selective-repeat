@@ -37,10 +37,26 @@ if __name__ == '__main__':
             time_of_last_data = time.time()
                 # try to receive message before timeout
             rdt.rdt_4_0_send(msg_L)
-            print("Messages converted for client:")
-            for i in rdt.buffer_send:
-                print(i)
             rdt.clear()
+            msg_convertidas = []
+        # try to receive message before timeout
+            print("Client: receiving messages")
+            while(len(msg_L) != len(msg_convertidas)):
+                msg_S = None
+                while msg_S == None:
+                    msg_S = rdt.rdt_4_0_receive()
+                    if msg_S is None:
+                        if time_of_last_data + timeout < time.time():
+                            break
+                        else:
+                            continue
+                time_of_last_data = time.time()
+
+                # print the result
+                if msg_S:
+                    msg_convertidas.append(msg_S)
+            for msg_S in msg_convertidas:
+                print('Client: Received the converted frase to: ' + msg_S + '\n')
         debug_stats(f"Simulation time = {(time.time()-begin):.2f}[s]")
         
             #dar um jeito de imprimir as mensagens
