@@ -34,6 +34,7 @@ if __name__ == '__main__':
             print('Server: converted %s \nto %s\n' % (msg_L, rep_msg_L))
             lista.append(rep_msg_L)
             print(f"lista total == {lista}")
+            sleep(1)
         print("Server: sending converted messages")
         rdt.rdt_4_0_send(lista)
         rdt.clear()
