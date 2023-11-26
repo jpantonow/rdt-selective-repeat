@@ -24,43 +24,45 @@ if __name__ == '__main__':
         'The art of debugging is figuring out what you really told your program to do rather than what you thought you told it to do. -- Andrew Singer',
         'The computer was born to solve problems that did not exist before. - Bill Gates']
     
-    for i in range(0,args.num_msg): #pra tornar mais extenso 
-        messages.append(msg_L)
+    msg_L_aux = msg_L[:]
+
+    for _ in range(args.num_msg):
+        msg_L.extend(msg_L_aux)
+
     timeout = 1000  # send the next message if not response
     rdt = RDT.RDT('client', args.server, args.port)
     in_order = {}
     try:
         begin = time.time()
-        for msg_L in messages:
-            for message in msg_L:
-                    time_of_last_data = time.time()
-                    print('Client asking to change case: ' + message)
-            time_of_last_data = time.time()
-                # try to receive message before timeout
-            rdt.rdt_4_0_send(msg_L)
-            rdt.clear()
+        for message in msg_L:
+            print('Client asking to change case: ' + message)
+        time_of_last_data = time.time()
+        # try to receive message before timeout
+        rdt.rdt_4_0_send(msg_L)
+        rdt.clear()
   
         # try to receive message before timeout
-            print("Client: receiving messages")
-            while(len(msg_L) != len(in_order)):
-                msg_S = None
-                msg_seq = None
-                while msg_S == None:
-                    (msg_seq,msg_S) = rdt.rdt_4_0_receive()
-                    if msg_S is None:
-                        if time_of_last_data + timeout < time.time():
-                            break
-                        else:
-                            continue
-                time_of_last_data = time.time()
+        print("Client: receiving messages")
+        while(len(msg_L) != len(in_order)):
+            msg_S = None
+            msg_seq = None
+            while msg_S == None:
+                (msg_seq,msg_S) = rdt.rdt_4_0_receive()
+                if msg_S is None:
+                    if time_of_last_data + timeout < time.time():
+                        break
+                    else:
+                        continue
+            time_of_last_data = time.time()
 
-                # print the result
-                if msg_seq not in in_order:
-                    in_order[msg_seq] = msg_S
-            msg_convertidas = [in_order[key] for key in sorted(in_order.keys())]
-            print(msg_convertidas)          
-            for msg_S in msg_convertidas:
-                print('Client: Received the converted frase to: ' + msg_S + '\n')
+            # print the result
+            if msg_seq not in in_order:
+                in_order[msg_seq] = msg_S
+                    
+        msg_convertidas = [in_order[key] for key in sorted(in_order.keys())]
+        print(msg_convertidas)          
+        for msg_S in msg_convertidas:
+            print('Client: Received the converted frase to: ' + msg_S + '\n')
         debug_stats(f"Simulation time = {(time.time()-begin):.2f}[s]")
         
             #dar um jeito de imprimir as mensagens
