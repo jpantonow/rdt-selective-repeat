@@ -192,6 +192,7 @@ class RDT:
                         debug_log("SENDER: ACK received")
                         pack_ack[packet.seq_num] = response_p.msg_S
                         self.pack_msg[packet.msg_S] = response_p.msg_S
+                        debug_stats(f"msg_length == {msg_length}")
                         debug_stats(f"Goodput=={(time.time()-t1_send):.2f}[s]")
                         if response_p.seq_num == packets[lowest_seq].seq_num:
                             for key in packets:
@@ -233,8 +234,6 @@ class RDT:
                     if (response_p.msg_S is "1"):
                         debug_log("SENDER: ACK RECEIVED")
                         debug_stats(f"Goodput=={(time.time()-t1_send):.2f}[s]")
-                        self.network.buffer_S = ''
-                        self.byte_buffer = ''
                         break
 
                     elif response_p.msg_S is "0":
