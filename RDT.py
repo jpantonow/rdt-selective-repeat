@@ -156,10 +156,15 @@ class RDT:
 
         self.window = packets[self.seq_num:self.window_size]
 
+        lowest_seq = 0
+        
         while(len(pack_ack)!=len(packets)):
-            for packet in packets:
+            for packet in packets[lowest_seq : lowest_seq + self.window_size]:
                 debug_log(f"packet transmiting -> {packet.msg_S}")
                 debug_log(f"pack_ack=={pack_ack}")
+                debug_log(packets[lowest_seq])
+                debug_log(lowest_seq)
+                debug_log(lowest_seq + self.window_size)
                 t1_send = time.time()
                 self.network.udt_send(packet.get_byte_S())
                 response = ''
@@ -181,8 +186,8 @@ class RDT:
                     debug_log(f"msg rcv == {response_p.msg_S}")
                     debug_log(f"packet.msg_S == {packet.msg_S}")
                         
-                    if packet.msg_S in pack_ack:
-                        if (pack_ack[packet.msg_S] == "1"):
+                    if packet.seq_num in pack_ack:
+                        if (pack_ack[packet.seq_num] == "1"):
                             debug_log("SENDER: Receiver behind sender")
                             test = Packet(response_p.seq_num, "1")
                             self.network.udt_send(test.get_byte_S())
@@ -190,9 +195,14 @@ class RDT:
                     elif (response_p.msg_S is "1"):
                         debug_log("pacote novo")
                         debug_log("ack recebido")
-                        pack_ack[packet.msg_S] = response_p.msg_S
+                        pack_ack[packet.seq_num] = response_p.msg_S
                         debug_stats(f"Goodput=={(time.time()-t1_send):.2f}[s]")
-                        
+                        debug_log(f"response_p.seqnum={response_p.seq_num}, packets[lowest_seq].seq_num = {packets[lowest_seq].seq_num}")
+                        if response_p.seq_num == packets[lowest_seq].seq_num:
+                            for key in packets:
+                                if key.seq_num not in pack_ack:
+                                    lowest_seq = key.seq_num
+                                    break
 
                     elif response_p.msg_S is "0":
                         debug_log("nak")
