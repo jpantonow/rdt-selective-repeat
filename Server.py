@@ -32,8 +32,10 @@ if __name__ == '__main__':
             # convert and reply
             rep_msg_L = upperCase(msg_L)
             print('Server: converted %s \nto %s\n' % (msg_L, rep_msg_L))
-            lista.append(rep_msg_L)
-            print(f"lista total == {lista}")
+            if(rep_msg_L not in rdt.pack_ack):
+                lista.append(rep_msg_L)
+                print(f"lista total == {lista}")
+            sleep(1)
         print("Server: sending converted messages")
         rdt.rdt_4_0_send(lista)
         rdt.clear()

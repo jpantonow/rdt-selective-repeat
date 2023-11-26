@@ -92,6 +92,8 @@ class RDT:
         self.buffer_send = []
         self.buffer_rcv = []
         self.window = []
+        self.pack_msg = {}
+        self.pack_ack = {}
 
     def check_buffer(self, buffer):
         for i in range(0, len(buffer)-1):
@@ -185,7 +187,6 @@ class RDT:
                     debug_log(f"packet.seq == {packet.seq_num}")
                     debug_log(f"response.seq == {response_p.msg_S}")
                     debug_log(f"response.msg == {response_p.msg_S}")    
-
                     if packet.seq_num in pack_ack:
                         if (pack_ack[packet.seq_num] == "1"):
                             debug_log("SENDER: Receiver behind sender")
@@ -205,7 +206,6 @@ class RDT:
                                     break
 
                     elif response_p.msg_S is "0":
-                        debug_log("nak")
                         debug_log("SENDER: NAK received")
                         self.byte_buffer = ''
 
@@ -213,22 +213,23 @@ class RDT:
                         debug_log("SENDER: Corrupted ACK")
                         self.byte_buffer = ''
 
-                    debug_log(f"send_buffer=={self.buffer_send}")
                     debug_stats(f"Throughput=={(time.time()-t1_send):.2f}[s]")
                     debug_log(f"pack_ack=={pack_ack}")
-                    debug_log(f"buffer sender == {self.buffer_send}")
                     self.network.buffer_S = ''
                     self.byte_buffer = ''
         self.network.udt_send(Packet(100000,"@").get_byte_S())
-
+        self.pack_ack = pack_ack
+        self.packets = packets
+        
     def rdt_4_0_receive(self):
         # ver a parada dos buffers no rdt_4_0_receive
         self.byte_buffer = ''
-        pack_ack = {}
+        #pack_ack = {}
+        pack_ack = self.pack_ack
         ret_S = None
         byte_S = self.network.udt_receive()
         self.byte_buffer += byte_S
-        current_seq = self.seq_num
+        debug_log(f"packack=={pack_ack}")
         # keep extracting packets - if reordered, could get more than one
         while True:
             # check if we have received enough bytes
@@ -238,12 +239,11 @@ class RDT:
             length = int(self.byte_buffer[:Packet.length_S_length])
             if len(self.byte_buffer) < length:
                 break  # not enough bytes to read the whole packet
-
             # Check if packet is corrupt
             if Packet.corrupt(self.byte_buffer):
                 # Send a NAK
                 debug_log("RECEIVER: Corrupt packet, sending NAK.")
-                answer = Packet(self.seq_num, "0")
+                answer = Packet(Packet.from_byte_S(self.byte_buffer[0:length]).seq_num, "0")
                 self.network.udt_send(answer.get_byte_S())
             else:
                 # create packet from buffer content
@@ -252,26 +252,29 @@ class RDT:
                 if p.is_ack_pack():
                     self.byte_buffer = self.byte_buffer[length:]
                     continue
-                if p.msg_S in pack_ack:
+                if p.seq_num in pack_ack:
                     debug_log(
                         'RECEIVER: Already received packet. ACK(n) again.')
                     answer = Packet(p.seq_num, "1")
                     self.network.udt_send(answer.get_byte_S())
 
-                elif p.msg_S not in pack_ack:
+                else:
                     debug_log(
                         'RECEIVER: Received new.  Send ACK(n).')
                     # SEND ACK
                     answer = Packet(p.seq_num, "1")
                     self.network.udt_send(answer.get_byte_S())
-                    pack_ack[p.msg_S] = "1"
+                    pack_ack[p.seq_num] = "1"
                 # Add contents to return string
                 ret_S = p.msg_S if (ret_S is None) else ret_S + p.msg_S
+                # remove the packet bytes from the buffer
+                self.byte_buffer = self.byte_buffer[length:]
+                # if this was the last packet, will return on the next iteration
+                if(p.msg_S in pack_ack):
+                    break
             # remove the packet bytes from the buffer
             self.byte_buffer = self.byte_buffer[length:]
             # if this was the last packet, will return on the next iteration
-            if(p.msg_S in pack_ack):
-                break
         if (ret_S):
             debug_log(f"RECEIVER: recv = {ret_S}")
         return ret_S
