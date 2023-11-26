@@ -32,7 +32,7 @@ class Packet:
     @classmethod
     def from_byte_S(self, byte_S):
         if Packet.corrupt(byte_S):
-            raise RuntimeError('Cannot initialize Packet: byte_S is corrupt')
+            raise RuntimeError(f"Cannot initialize Packet: byte_s = {byte_S} is corrupt")
 
         # extract the fields
         seq_num = int(
@@ -285,6 +285,8 @@ class RDT:
             if Packet.corrupt(self.byte_buffer):
                 # Send a NAK
                 debug_log("RECEIVER: Corrupt packet, sending NAK.")
+                if(Packet.corrupt(self.byte_buffer[0:length])):
+                    break
                 answer = Packet(Packet.from_byte_S(self.byte_buffer[0:length]).seq_num, "0")
                 self.network.udt_send(answer.get_byte_S())
             else:

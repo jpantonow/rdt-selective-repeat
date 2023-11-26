@@ -40,8 +40,8 @@ if __name__ == '__main__':
         print("Server: sending converted messages")
         print(lista)
         print(send_in_order)
-        rdt.rdt_4_0_send(lista)
         rdt.clear()
+        rdt.rdt_4_0_send(lista)
 
 
                 
