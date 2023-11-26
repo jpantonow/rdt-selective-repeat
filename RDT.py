@@ -91,7 +91,7 @@ class RDT:
     seq_num = 0
     # buffer of bytes read from network
     byte_buffer = ""
-    timeout = 10
+    timeout = 1
 
     def __init__(self, role_S, server_S, port):
         self.network = Network.NetworkLayer(role_S, server_S, port)
@@ -121,7 +121,7 @@ class RDT:
                     self.network.udt_send(packet.get_byte_S())
                     debug_log(f"Packet {packet.seq_num} mandado")
                     time_dict[packet.seq_num] = time.time()
-                    time.sleep(1)
+                    time.sleep(0.02)
 
                 # Verifica se chegou algum ACK, evitar acumulo de packets
                 response = self.network.udt_receive()
@@ -141,6 +141,8 @@ class RDT:
                                         lowest_seq = key
                                         window_change = True
                                         break
+                    else:
+                        debug_log("Corrompido")
 
             is_timeout = False
             window_change = False
@@ -177,7 +179,9 @@ class RDT:
                     # Verifica se a resposta foi ACK
                     if response_p.msg_S == "1":
                         debug_log(f"Recebi: ACK: {response_p.seq_num}")
-                        ack_dict[response_p.seq_num] = 1
+                        if not ack_dict[response_p.seq_num]:
+                                ack_dict[response_p.seq_num] = 1
+                                ack_received += 1
                         if response_p.seq_num == lowest_seq:
                             for key in range(len(packets)):
                                 if not ack_dict[key]:

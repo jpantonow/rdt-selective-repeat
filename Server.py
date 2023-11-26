@@ -22,7 +22,7 @@ if __name__ == "__main__":
             seg_men = []
             for i in range(0, len(msg), 10):
                 seg_men.append(msg[i : i + 10])
-            time.sleep(1)
+            time.sleep(0.2)
             if msg != "":
                 print("Enviando os segmentos convertidos.")
                 rdt.rdt_4_0_send(seg_men)
