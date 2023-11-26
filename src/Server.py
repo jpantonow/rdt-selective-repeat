@@ -1,7 +1,7 @@
 import argparse
 import RDT
 import time
-from time import sleep
+
 def upperCase(message):
     capitalizedSentence = message.upper()
     return capitalizedSentence
