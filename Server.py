@@ -25,19 +25,18 @@ if __name__ == '__main__':
                     break
                 else:
                     continue
-            if(msg_L):
-                print(f"SERVIDOR RECEBEU == {msg_L}")
+            if(msg_L=="@"):
+                print("Server: special message to stop converting")
+                break
             time_of_last_data = time.time()
             # convert and reply
             rep_msg_L = upperCase(msg_L)
             print('Server: converted %s \nto %s\n' % (msg_L, rep_msg_L))
-            listconverted = [rep_msg_L]
             lista.append(rep_msg_L)
             print(f"lista total == {lista}")
-            print(f"listconverted == {listconverted}")
-            sleep(5)
-            rdt.rdt_4_0_send(listconverted)
-            rdt.clear()
+        print("Server: sending converted messages")
+        rdt.rdt_4_0_send(lista)
+        rdt.clear()
 
 
                 

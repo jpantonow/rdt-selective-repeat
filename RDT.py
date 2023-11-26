@@ -159,10 +159,8 @@ class RDT:
         debug_log(f"janela=={self.window}")
         sleep(5)
         while(len(pack_ack)!=len(packets)):
-            debug_log("novo loop while")
             for packet in packets:
                 debug_log(f"packet transmiting -> {packet.msg_S}")
-                debug_log(f"novo loop for")
                 debug_log(f"pack_ack=={pack_ack}")
                 t1_send = time.time()
                 self.network.udt_send(packet.get_byte_S())
@@ -218,6 +216,7 @@ class RDT:
                     debug_log(f"buffer sender == {self.buffer_send}")
                     self.network.buffer_S = ''
                     self.byte_buffer = ''
+        self.network.udt_send(Packet(100000,"@").get_byte_S())
 
     def rdt_4_0_receive(self):
         # ver a parada dos buffers no rdt_4_0_receive
