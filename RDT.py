@@ -156,8 +156,6 @@ class RDT:
 
         self.window = packets[self.seq_num:self.window_size]
 
-        debug_log(f"janela=={self.window}")
-        sleep(5)
         while(len(pack_ack)!=len(packets)):
             for packet in packets:
                 debug_log(f"packet transmiting -> {packet.msg_S}")
@@ -174,7 +172,6 @@ class RDT:
                     continue
 
                 debug_log("SENDER: " + response)
-                sleep(5)
                 msg_length = int(response[:Packet.length_S_length])
                 self.byte_buffer = response[msg_length:]
 
@@ -183,12 +180,8 @@ class RDT:
                     response_p = Packet.from_byte_S(response[:msg_length])
                     debug_log(f"msg rcv == {response_p.msg_S}")
                     debug_log(f"packet.msg_S == {packet.msg_S}")
-                    if(response_p.msg_S == packet.msg_S.upper()):
-                        debug_log("pacote convertido")
-                        self.buffer_send.append(response_p.msg_S)
-                        debug_stats(f"Goodput=={(time.time()-t1_send):.2f}[s]")
                         
-                    elif packet.msg_S in pack_ack:
+                    if packet.msg_S in pack_ack:
                         if (pack_ack[packet.msg_S] == "1"):
                             debug_log("SENDER: Receiver behind sender")
                             test = Packet(response_p.seq_num, "1")
