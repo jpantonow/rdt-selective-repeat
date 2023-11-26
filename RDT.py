@@ -225,7 +225,8 @@ class RDT:
     def rdt_4_0_receive(self):
         # ver a parada dos buffers no rdt_4_0_receive
         self.byte_buffer = ''
-        #pack_ack = self.pack_ack
+        #pack_ack = {}
+        pack_ack = self.pack_ack
         ret_S = None
         byte_S = self.network.udt_receive()
         self.byte_buffer += byte_S
@@ -239,12 +240,10 @@ class RDT:
             length = int(self.byte_buffer[:Packet.length_S_length])
             if len(self.byte_buffer) < length:
                 break  # not enough bytes to read the whole packet
-            sleep(1)
             # Check if packet is corrupt
             if Packet.corrupt(self.byte_buffer):
                 # Send a NAK
                 debug_log("RECEIVER: Corrupt packet, sending NAK.")
-                sleep(2)
                 answer = Packet(Packet.from_byte_S(self.byte_buffer[0:length]).seq_num, "0")
                 self.network.udt_send(answer.get_byte_S())
             else:
@@ -254,7 +253,7 @@ class RDT:
                 if p.is_ack_pack():
                     self.byte_buffer = self.byte_buffer[length:]
                     continue
-                if p.msg_S in pack_ack:
+                if p.seq_num in pack_ack:
                     debug_log(
                         'RECEIVER: Already received packet. ACK(n) again.')
                     answer = Packet(p.seq_num, "1")
@@ -266,7 +265,7 @@ class RDT:
                     # SEND ACK
                     answer = Packet(p.seq_num, "1")
                     self.network.udt_send(answer.get_byte_S())
-                    pack_ack[p.msg_S] = "1"
+                    pack_ack[p.seq_num] = "1"
                 # Add contents to return string
                 ret_S = p.msg_S if (ret_S is None) else ret_S + p.msg_S
                 # remove the packet bytes from the buffer
