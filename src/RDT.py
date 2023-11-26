@@ -148,25 +148,21 @@ class RDT:
         # ack(n) in recv --> mark packet n as received
         # if n smallest unacked packet advance window to unnacked seq
         # configurar identifier para ter o mesmo numero de ack
-        msg_acks = []
         packets = []
-        iterator = 0
         pack_ack = {}
         self.seq_num = 0
         for msg_S in msg_L:
-            packets.append(Packet((self.seq_num+iterator), msg_S))
-            iterator += 1
+            packets.append(Packet(self.seq_num, msg_S))
+            self.seq_num += 1
 
         self.window_size = round(len(packets)/2)
-
-        self.window = packets[self.seq_num:self.window_size]
 
         lowest_seq = 0
         
         while(len(pack_ack)!=len(packets)):
             for packet in packets[lowest_seq : lowest_seq + self.window_size]:
-                debug_log(f"packet transmiting -> {packet.msg_S}")
-                debug_log(f"pack_ack=={pack_ack}")
+                debug_log(f"Transmiting Packet-> {packet.msg_S}")
+                debug_log(f"Pack_Ack=={pack_ack}")
                 t1_send = time.time()
                 self.network.udt_send(packet.get_byte_S())
                 response = ''
@@ -183,13 +179,8 @@ class RDT:
                 self.byte_buffer = response[msg_length:]
 
                 if not Packet.corrupt(response[:msg_length]):
-                    debug_log("pacote nao corrompido")
+                    debug_log("Packet Not Corrupted")
                     response_p = Packet.from_byte_S(response[:msg_length])
-                    debug_log(f"msg rcv == {response_p.msg_S}")
-                    debug_log(f"packet.msg_S == {packet.msg_S}")
-                    debug_log(f"packet.seq == {packet.seq_num}")
-                    debug_log(f"response.seq == {response_p.msg_S}")
-                    debug_log(f"response.msg == {response_p.msg_S}")    
                     if packet.seq_num in pack_ack:
                         if (pack_ack[packet.seq_num] == "1"):
                             debug_log("SENDER: Receiver behind sender")
@@ -197,12 +188,11 @@ class RDT:
                             self.network.udt_send(test.get_byte_S())
 
                     elif (response_p.msg_S is "1"):
-                        debug_log("pacote novo")
-                        debug_log("ack recebido")
+                        debug_log("NEW PACKET")
+                        debug_log("SENDER: ACK received")
                         pack_ack[packet.seq_num] = response_p.msg_S
                         self.pack_msg[packet.msg_S] = response_p.msg_S
                         debug_stats(f"Goodput=={(time.time()-t1_send):.2f}[s]")
-                        debug_log(f"response_p.seqnum={response_p.seq_num}, packets[lowest_seq].seq_num = {packets[lowest_seq].seq_num}")
                         if response_p.seq_num == packets[lowest_seq].seq_num:
                             for key in packets:
                                 if key.seq_num not in pack_ack:
@@ -218,7 +208,6 @@ class RDT:
                         self.byte_buffer = ''
 
                     debug_stats(f"Throughput=={(time.time()-t1_send):.2f}[s]")
-                    debug_log(f"pack_ack=={pack_ack}")
                     self.network.buffer_S = ''
                     self.byte_buffer = ''
         
@@ -242,10 +231,10 @@ class RDT:
                     response_p = Packet.from_byte_S(response[:msg_length])
 
                     if (response_p.msg_S is "1"):
-                        debug_log("pacote novo")
-                        debug_log("ack recebido")
+                        debug_log("SENDER: ACK RECEIVED")
                         debug_stats(f"Goodput=={(time.time()-t1_send):.2f}[s]")
-                        debug_log(f"response_p.seqnum={response_p.seq_num}, packets[lowest_seq].seq_num = {packets[lowest_seq].seq_num}")
+                        self.network.buffer_S = ''
+                        self.byte_buffer = ''
                         break
 
                     elif response_p.msg_S is "0":
@@ -257,9 +246,9 @@ class RDT:
                         self.byte_buffer = ''
 
                     debug_stats(f"Throughput=={(time.time()-t1_send):.2f}[s]")
-                    debug_log(f"pack_ack=={pack_ack}")
                     self.network.buffer_S = ''
                     self.byte_buffer = ''
+                    
         self.pack_ack = pack_ack
         self.packets = packets
         
