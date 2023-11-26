@@ -1,7 +1,7 @@
 import argparse
 import RDT
 import time
-
+from time import sleep
 def upperCase(message):
     capitalizedSentence = message.upper()
     return capitalizedSentence
@@ -35,6 +35,7 @@ if __name__ == '__main__':
             lista.append(rep_msg_L)
             print(f"lista total == {lista}")
             print(f"listconverted == {listconverted}")
+            sleep(5)
             rdt.rdt_4_0_send(listconverted)
             rdt.clear()
 
