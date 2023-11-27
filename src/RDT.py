@@ -161,6 +161,8 @@ class RDT:
         
         while(len(pack_ack)!=len(packets)):
             for packet in packets[lowest_seq : lowest_seq + self.window_size]:
+                if(packet.seq_num in pack_ack):
+                    continue
                 debug_log(f"Transmiting Packet-> {packet.msg_S}")
                 debug_log(f"Pack_Ack=={pack_ack}")
                 t1_send = time.time()
