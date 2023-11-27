@@ -83,7 +83,7 @@ class RDT:
     seq_num = 0
     # buffer of bytes read from network
     byte_buffer = ''
-    timeout = 3
+    timeout = 2
     window_size = 0
 
     def __init__(self, role_S, server_S, port):
