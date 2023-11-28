@@ -59,8 +59,9 @@ if __name__ == '__main__':
             if msg_seq not in in_order:
                 in_order[msg_seq] = msg_S
                     
-        msg_convertidas = [in_order[key] for key in sorted(in_order.keys())]
-        print(msg_convertidas)          
+        #msg_convertidas = [in_order[key] for key in sorted(in_order.keys())]
+        msg_convertidas = rdt.reorder(in_order)
+        #print(msg_convertidas)          
         for msg_S in msg_convertidas:
             print('Client: Received the converted frase to: ' + msg_S + '\n')
         debug_stats(f"Simulation time = {(time.time()-begin):.2f}[s]")

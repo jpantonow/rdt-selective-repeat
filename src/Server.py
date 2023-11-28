@@ -36,12 +36,13 @@ if __name__ == '__main__':
                 print(f"dicionario total == {send_in_order}")
                 print('Server: converted %s \nto %s\n' % (msg_L, rep_msg_L))
         
-        lista = [send_in_order[key] for key in sorted(send_in_order.keys())]        
+        server_rcv = rdt.reorder(send_in_order)
+        #lista = [send_in_order[key] for key in sorted(send_in_order.keys())]        
         print("Server: sending converted messages")
-        print(lista)
-        print(send_in_order)
+        #print(lista)
+        #print(send_in_order)
         rdt.clear()
-        rdt.rdt_4_0_send(lista)
+        rdt.rdt_4_0_send(server_rcv)
 
 
                 
