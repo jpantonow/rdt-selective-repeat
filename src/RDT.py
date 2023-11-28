@@ -136,6 +136,9 @@ class RDT:
     def remove_packets(self, Packet: Packet):
         self.packets.remove(Packet)
 
+    def reorder(dict_data):
+        return [dict_data[key] for key in sorted(dict_data.keys())]
+    
     def disconnect(self):
         self.network.disconnect()
 
