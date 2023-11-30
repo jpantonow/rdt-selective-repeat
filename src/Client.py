@@ -25,7 +25,8 @@ if __name__ == '__main__':
         'The computer was born to solve problems that did not exist before. - Bill Gates']
     
     msg_L_aux = msg_L[:]
-
+    totmsgbytes = 0
+    
     for _ in range(args.num_msg):
         msg_L.extend(msg_L_aux)
 
@@ -36,11 +37,15 @@ if __name__ == '__main__':
         begin = time.time()
         for message in msg_L:
             print('Client asking to change case: ' + message)
-        time_of_last_data = time.time()
+            #totmsgbytes += (message.encode('utf-8'))
+            
+        
         # try to receive message before timeout
         rdt.rdt_4_0_send(msg_L)
         rdt.clear()
-  
+        
+        time_of_last_data = time.time()
+        send_time = begin - time_of_last_data
         # try to receive message before timeout
         print("Client: receiving messages")
         while(len(msg_L) != len(in_order)):
@@ -58,13 +63,19 @@ if __name__ == '__main__':
             # print the result
             if msg_seq not in in_order:
                 in_order[msg_seq] = msg_S
-                    
+
+        
         #msg_convertidas = [in_order[key] for key in sorted(in_order.keys())]
         msg_convertidas = rdt.reorder(in_order)
         #print(msg_convertidas)          
         for msg_S in msg_convertidas:
             print('Client: Received the converted frase to: ' + msg_S + '\n')
         debug_stats(f"Simulation time = {(time.time()-begin):.2f}[s]")
+        debug_stats(f"Goodput = {((rdt.goodbput_bytes)/time.time()-begin):.2f}[bps]")
+        debug_stats(f"Total of transmited packets = {rdt.totalpackets}")
+        debug_stats(f"Total of corrupted acks = {rdt.totalcorrupted_acks}")
+        debug_stats(f"Total of corrupted packets = {rdt.totalcorrupted}")
+        debug_stats(f"Total of retransmitted packets = {rdt.totalretransmited}")
         
             #dar um jeito de imprimir as mensagens
     except (KeyboardInterrupt, SystemExit):
