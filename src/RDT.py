@@ -204,7 +204,7 @@ class RDT:
                             debug_log("SENDER: Receiver behind sender")
                             test = Packet(response_p.seq_num, "1")
                             self.network.udt_send(test.get_byte_S())
-                            self.goodbput_bytes += len(packet)
+                            self.goodbput_bytes += len(packet.msg_S)
 
                     elif (response_p.msg_S is "1"):
                         debug_log("NEW PACKET")
