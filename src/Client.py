@@ -37,7 +37,7 @@ if __name__ == '__main__':
         begin = time.time()
         for message in msg_L:
             print('Client asking to change case: ' + message)
-            #totmsgbytes += (message.encode('utf-8'))
+            totmsgbytes += len(message.encode('utf-8'))
             
         
         # try to receive message before timeout
@@ -45,7 +45,7 @@ if __name__ == '__main__':
         rdt.clear()
         
         time_of_last_data = time.time()
-        send_time = begin - time_of_last_data
+        send_time = time_of_last_data -  begin 
         # try to receive message before timeout
         print("Client: receiving messages")
         while(len(msg_L) != len(in_order)):
@@ -71,7 +71,8 @@ if __name__ == '__main__':
         for msg_S in msg_convertidas:
             print('Client: Received the converted frase to: ' + msg_S + '\n')
         debug_stats(f"Simulation time = {(time.time()-begin):.2f}[s]")
-        debug_stats(f"Goodput = {((rdt.goodbput_bytes)/time.time()-begin):.2f}[bps]")
+        debug_stats(f"totmsgbytes = {totmsgbytes}")
+        debug_stats(f"Goodput = {(totmsgbytes)/(send_time):.2f}[bps]")
         debug_stats(f"Total of transmited packets = {rdt.totalpackets}")
         debug_stats(f"Total of corrupted acks = {rdt.totalcorrupted_acks}")
         debug_stats(f"Total of corrupted packets = {rdt.totalcorrupted}")
