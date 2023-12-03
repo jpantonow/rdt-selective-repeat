@@ -89,9 +89,11 @@ class RDT:
     totalretransmited = 0
     totalcorrupted = 0
     totalcorrupted_acks = 0
-    goodbput_bytes = 0
+    goodput_bytes = 0
     time_goodput = 0
     sizeof_goodput = 0
+    
+    
     
     def __init__(self, role_S, server_S, port):
         self.network = Network.NetworkLayer(role_S, server_S, port)
@@ -211,8 +213,9 @@ class RDT:
                         debug_log("SENDER: ACK received")
                         pack_ack[packet.seq_num] = response_p.msg_S
                         self.pack_msg[packet.msg_S] = response_p.msg_S
-                        debug_stats(f"msg_length == {msg_length}")
-                        debug_stats(f"Goodput=={(time.time()-t1_send):.2f}[s]")
+                        #debug_stats(f"msg_length == {msg_length}")
+                        self.goodput_bytes += 53
+                        #debug_stats(f"Goodput=={(time.time()-t1_send):.2f}[s]")
                         if response_p.seq_num == packets[lowest_seq].seq_num:
                             for key in packets:
                                 if key.seq_num not in pack_ack:
@@ -228,7 +231,7 @@ class RDT:
                         self.byte_buffer = ''
                         self.totalcorrupted_acks += 1
                 
-                    debug_stats(f"Throughput=={(time.time()-t1_send):.2f}[s]")
+                    debug_stats(f"Throughput=={(self.network.bytes_sent)/(time.time()-t1_send):.2f}[s]")
                     self.network.buffer_S = ''
                     self.byte_buffer = ''
                 else:
@@ -268,8 +271,7 @@ class RDT:
                     else:
                         debug_log("SENDER: Corrupted ACK")
                         self.byte_buffer = ''
-
-                    debug_stats(f"Throughput=={(time.time()-t1_send):.2f}[s]")
+                    #debug_stats(f"Throughput=={(self.network.bytes_sent)/(time.time()-t1_send):.2f}[s]")
                     self.network.buffer_S = ''
                     self.byte_buffer = ''
                 else:

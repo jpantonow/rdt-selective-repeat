@@ -1,6 +1,7 @@
 import argparse
 import socket
 import threading
+import time
 from time import sleep
 import random
 import RDT
@@ -9,8 +10,8 @@ import RDT
 ## Provides an abstraction for the network layer
 class NetworkLayer:
     # configuration parameters
-    prob_pkt_loss = 0
-    prob_byte_corr = 0
+    prob_pkt_loss = 0.1
+    prob_byte_corr = 0.1
     prob_pkt_reorder = 0
 
     # class variables
@@ -23,6 +24,10 @@ class NetworkLayer:
     socket_timeout = 0.1
     reorder_msg_S = None
     throughput = 0
+    bytes_sent = 0
+    ipv4_header = 20
+    ethernet = 14
+    tcp = 32
 
     def __init__(self, role_S, server_S, port):
         if role_S == 'client':
@@ -30,7 +35,7 @@ class NetworkLayer:
             self.conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.conn.connect((server_S, port))
             self.conn.settimeout(self.socket_timeout)
-
+            
         elif role_S == 'server':
             print('Network: role is server')
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -59,6 +64,7 @@ class NetworkLayer:
                 self.udt_send(msg)
                 
     def udt_send(self, msg_S):
+        start_sending = time.time()
         # return without sending if the packet is being dropped
         if random.random() < self.prob_pkt_loss:
             return
@@ -76,7 +82,6 @@ class NetworkLayer:
             else:
                 msg_S += self.reorder_msg_S
                 self.reorder_msg_S = None
-
         # keep calling send until all the bytes are transferred
         totalsent = 0
         while totalsent < len(msg_S):
@@ -84,6 +89,9 @@ class NetworkLayer:
             if sent == 0:
                 raise RuntimeError("socket connection broken")
             totalsent = totalsent + sent
+        sending_time = time.time() - start_sending
+        self.bytes_sent += self.tcp + self.ethernet + self.ipv4_header + sent
+
 
     ## Receive data from the network and save in internal buffer
     def collect(self):
