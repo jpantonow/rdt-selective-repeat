@@ -64,7 +64,6 @@ class NetworkLayer:
                 self.udt_send(msg)
                 
     def udt_send(self, msg_S):
-        start_sending = time.time()
         # return without sending if the packet is being dropped
         if random.random() < self.prob_pkt_loss:
             return
@@ -89,7 +88,6 @@ class NetworkLayer:
             if sent == 0:
                 raise RuntimeError("socket connection broken")
             totalsent = totalsent + sent
-        sending_time = time.time() - start_sending
         self.bytes_sent += self.tcp + self.ethernet + self.ipv4_header + sent
 
 

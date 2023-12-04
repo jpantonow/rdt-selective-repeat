@@ -37,8 +37,6 @@ if __name__ == '__main__':
         begin = time.time()
         for message in msg_L:
             print('Client asking to change case: ' + message)
-            totmsgbytes += len(message.encode('utf-8'))
-            
         
         # try to receive message before timeout
         rdt.rdt_4_0_send(msg_L)
