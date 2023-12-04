@@ -26,19 +26,19 @@ if __name__ == '__main__':
                 else:
                     continue
             if(msg_L=="\0"):
-                print("Server: special message to stop converting")
+                print("\nServer: special message to stop converting")
                 break
             time_of_last_data = time.time()
             # convert and reply
             if(seq_L not in send_in_order):
                 rep_msg_L = upperCase(msg_L)
                 send_in_order[seq_L] = rep_msg_L
-                print(f"dicionario total == {send_in_order}")
-                print('Server: converted %s \nto %s\n' % (msg_L, rep_msg_L))
+                print(f"\nmsgs_rcvs == {send_in_order}")
+                print('\nServer: converted %s \nto %s\n' % (msg_L, rep_msg_L))
         
         server_rcv = rdt.reorder(send_in_order)
         #lista = [send_in_order[key] for key in sorted(send_in_order.keys())]        
-        print("Server: sending converted messages")
+        print("\nServer: sending converted messages")
         #print(lista)
         #print(send_in_order)
         rdt.clear()

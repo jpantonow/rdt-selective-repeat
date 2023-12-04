@@ -3,6 +3,7 @@ import argparse
 import time
 from time import sleep
 import hashlib
+import sys
 
 debug = True
 # default = False
@@ -214,7 +215,7 @@ class RDT:
                         pack_ack[packet.seq_num] = response_p.msg_S
                         self.pack_msg[packet.msg_S] = response_p.msg_S
                         #debug_stats(f"msg_length == {msg_length}")
-                        self.goodput_bytes += 53
+                        self.goodput_bytes += sys.getsizeof(packet)
                         #debug_stats(f"Goodput=={(time.time()-t1_send):.2f}[s]")
                         if response_p.seq_num == packets[lowest_seq].seq_num:
                             for key in packets:

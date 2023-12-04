@@ -69,7 +69,7 @@ if __name__ == '__main__':
         msg_convertidas = rdt.reorder(in_order)
         #print(msg_convertidas)          
         for msg_S in msg_convertidas:
-            print('Client: Received the converted frase to: ' + msg_S + '\n')
+            print('\nClient: Received the converted frase to: ' + msg_S + '\n')
         debug_stats(f"Simulation time = {(time.time()-begin):.2f}[s]")
         debug_stats(f"Throughput = {(rdt.network.bytes_sent)/(send_time):.2f}[Bps]")
         debug_stats(f"Goodput = {(rdt.goodput_bytes)/(send_time):.2f}[Bps]")
