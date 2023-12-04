@@ -237,11 +237,13 @@ class RDT:
                     self.byte_buffer = ''
                 else:
                     self.totalcorrupted += 1
+                    
         self.byte_buffer = ''
         self.network.buffer_S = ''
         
         while True:
-                self.network.udt_send(Packet(100000,"\0").get_byte_S())    
+                packet = Packet(100000,"\0")
+                self.network.udt_send(packet.get_byte_S())    
                 response = ''
                 timer = time.time()
 
@@ -256,6 +258,8 @@ class RDT:
                 self.totalpackets +=1
                 if(packet.seq_num in transmited):
                     self.totalretransmited += 1
+                else:
+                    transmited.append(packet.seq_num)
                     
                 if not Packet.corrupt(response[:msg_length]):
                     response_p = Packet.from_byte_S(response[:msg_length])
