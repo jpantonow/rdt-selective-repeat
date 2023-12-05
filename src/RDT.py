@@ -95,14 +95,9 @@ class RDT:
     sizeof_goodput = 0
     
     
-    
     def __init__(self, role_S, server_S, port):
         self.network = Network.NetworkLayer(role_S, server_S, port)
         self.packets = []
-        self.buffer_send = []
-        self.buffer_rcv = []
-        self.window = []
-        self.pack_msg = {}
         self.pack_ack = {}
 
     def check_buffer(self, buffer):
@@ -117,11 +112,7 @@ class RDT:
         self.seq_num = 0
         self.byte_buffer = ''
         self.packets = []
-        self.buffer_send = []
-        self.buffer_rcv = []
         self.pack_ack = {}
-        self.pack_msg = {}
-        self.window = []
 
     def set_window_size(self, number):
         self.window_size = number
@@ -137,12 +128,6 @@ class RDT:
         for i in range(0, len(Packets)-1):
             self.network.udt_send(Packets[i].get_byte_S())
 
-    def adjust_packet_size(self, packets):
-        seq_num = int(self.seq_num)
-        window_size = int(self.window_size)
-        new_packet = packets[seq_num:window_size]
-        return new_packet
-
     def remove_packets(self, Packet: Packet):
         self.packets.remove(Packet)
 
@@ -153,14 +138,6 @@ class RDT:
         self.network.disconnect()
 
     def rdt_4_0_send(self, msg_L):
-        # data from above:
-        # if next available seq in window -> send packet
-        # timeout(n):
-        # resend packet n, restart timer
-
-        # ack(n) in recv --> mark packet n as received
-        # if n smallest unacked packet advance window to unnacked seq
-        # configurar identifier para ter o mesmo numero de ack
         packets = []
         pack_ack = {}
         self.seq_num = 0
@@ -176,8 +153,8 @@ class RDT:
             for packet in packets[lowest_seq : lowest_seq + self.window_size]:
                 if(packet.seq_num in pack_ack):
                     continue
-                debug_log(f"Transmiting Packet-> {packet.msg_S}")
-                debug_log(f"Pack_Ack=={pack_ack}")
+                debug_log(f"SENDER: TRANSMITING PACKET -> {packet.msg_S}")
+                debug_log(f"PACK_ACK == {pack_ack}")
                 t1_send = time.time()
                 self.network.udt_send(packet.get_byte_S())
                 response = ''
@@ -200,7 +177,6 @@ class RDT:
                     transmited.append(packet.seq_num)
                 
                 if not Packet.corrupt(response[:msg_length]):
-                    debug_log("Packet Not Corrupted")
                     response_p = Packet.from_byte_S(response[:msg_length])
                     if packet.seq_num in pack_ack:
                         if (pack_ack[packet.seq_num] == "1"):
@@ -213,7 +189,6 @@ class RDT:
                         debug_log("NEW PACKET")
                         debug_log("SENDER: ACK received")
                         pack_ack[packet.seq_num] = response_p.msg_S
-                        self.pack_msg[packet.msg_S] = response_p.msg_S
                         #debug_stats(f"msg_length == {msg_length}")
                         self.goodput_bytes += sys.getsizeof(packet)
                         #debug_stats(f"Goodput=={(time.time()-t1_send):.2f}[s]")
@@ -232,7 +207,6 @@ class RDT:
                         self.byte_buffer = ''
                         self.totalcorrupted_acks += 1
                 
-                    debug_stats(f"Throughput=={(self.network.bytes_sent)/(time.time()-t1_send):.2f}[s]")
                     self.network.buffer_S = ''
                     self.byte_buffer = ''
                 else:
@@ -242,7 +216,7 @@ class RDT:
         self.network.buffer_S = ''
         
         while True:
-                packet = Packet(100000,"\0")
+                packet = Packet(999999999,"\0")
                 self.network.udt_send(packet.get_byte_S())    
                 response = ''
                 timer = time.time()
@@ -266,7 +240,6 @@ class RDT:
 
                     if (response_p.msg_S is "1"):
                         debug_log("SENDER: ACK RECEIVED")
-                        debug_stats(f"Goodput=={(time.time()-t1_send):.2f}[s]")
                         break
 
                     elif response_p.msg_S is "0":
@@ -276,7 +249,7 @@ class RDT:
                     else:
                         debug_log("SENDER: Corrupted ACK")
                         self.byte_buffer = ''
-                    #debug_stats(f"Throughput=={(self.network.bytes_sent)/(time.time()-t1_send):.2f}[s]")
+            
                     self.network.buffer_S = ''
                     self.byte_buffer = ''
                 else:
@@ -343,7 +316,7 @@ class RDT:
             self.byte_buffer = self.byte_buffer[length:]
             # if this was the last packet, will return on the next iteration
         if (ret_S):
-            debug_log(f"RECEIVER: recv = {ret_S}")
+            debug_log(f"RECEIVER: MSG_RECEIVED = {ret_S}")
         return (ret_seq,ret_S)
 
 

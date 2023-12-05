@@ -26,7 +26,7 @@ if __name__ == '__main__':
                 else:
                     continue
             if(msg_L=="\0"):
-                print("\nServer: special message to stop converting")
+                print("\nServer: received special message to stop converting")
                 break
             time_of_last_data = time.time()
             # convert and reply
