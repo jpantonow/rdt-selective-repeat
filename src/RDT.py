@@ -189,9 +189,7 @@ class RDT:
                         debug_log("NEW PACKET")
                         debug_log("SENDER: ACK received")
                         pack_ack[packet.seq_num] = response_p.msg_S
-                        #debug_stats(f"msg_length == {msg_length}")
                         self.goodput_bytes += sys.getsizeof(packet)
-                        #debug_stats(f"Goodput=={(time.time()-t1_send):.2f}[s]")
                         if response_p.seq_num == packets[lowest_seq].seq_num:
                             for key in packets:
                                 if key.seq_num not in pack_ack:
