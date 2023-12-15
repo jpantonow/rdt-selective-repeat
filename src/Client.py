@@ -1,6 +1,10 @@
 import argparse
 import RDT
 import time
+import matplotlib.pyplot as plt
+import numpy as np
+
+
 
 def debug_stats(message):
     print("\033[1;32m" + message + "\033[0m")
@@ -75,7 +79,18 @@ if __name__ == '__main__':
         debug_stats(f"Total of corrupted acks = {rdt.totalcorrupted_acks}")
         debug_stats(f"Total of corrupted packets = {rdt.totalcorrupted}")
         debug_stats(f"Total of retransmitted packets = {rdt.totalretransmited}")
-        
+        pksent = rdt.network.pktsent
+        timelist = [(a*1e3) for a in rdt.network.timerlist]
+        throughput = [(a / b)/1e3 for a, b in zip(rdt.network.pktsent,rdt.network.timerlist)]
+        #timelist = [a * (10**8) for a in rdt.network.timerlist]
+        #throughput = [(a / b)*(10**8) for a, b in zip(rdt.network.pktsent,rdt.network.timerlist)]
+        plt.scatter(timelist, throughput)
+        for pktth, time in zip(throughput, timelist):
+            plt.annotate('',xy=(time,pktth), xytext= (10,-10), textcoords='offset points')
+        plt.title("Throughput X Time")
+        plt.ylabel("Throughput [kB/s]")
+        plt.xlabel("Time [ms]")
+        plt.show()
             #dar um jeito de imprimir as mensagens
     except (KeyboardInterrupt, SystemExit):
         print("Ending connection...")

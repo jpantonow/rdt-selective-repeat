@@ -93,7 +93,7 @@ class RDT:
     goodput_bytes = 0
     time_goodput = 0
     sizeof_goodput = 0
-    
+    timerlist = []
     
     def __init__(self, role_S, server_S, port):
         self.network = Network.NetworkLayer(role_S, server_S, port)
@@ -165,7 +165,9 @@ class RDT:
                     
                 if response == '':
                     continue
-
+                
+                self.network.timerlist.append(time.time()-timer)
+                self.timerlist.append(float(f"{time.time() - timer:.2f}"))
                 debug_log("SENDER: " + response)
                 msg_length = int(response[:Packet.length_S_length])
                 self.byte_buffer = response[msg_length:]
@@ -224,7 +226,8 @@ class RDT:
                     
                 if response == '':
                     continue
-
+                
+                self.network.timerlist.append(time.time()-timer)
                 msg_length = int(response[:Packet.length_S_length])
                 self.byte_buffer = response[msg_length:]
                 self.totalpackets +=1
@@ -241,11 +244,11 @@ class RDT:
                         break
 
                     elif response_p.msg_S is "0":
-                        debug_log("SENDER: NAK received")
+                        #debug_log("SENDER: NAK received")
                         self.byte_buffer = ''
 
                     else:
-                        debug_log("SENDER: Corrupted ACK")
+                    #debug_log("SENDER: Corrupted ACK")
                         self.byte_buffer = ''
             
                     self.network.buffer_S = ''

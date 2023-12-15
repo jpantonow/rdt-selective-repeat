@@ -28,6 +28,8 @@ class NetworkLayer:
     ipv4_header = 20
     ethernet = 14
     tcp = 32
+    pktsent = []
+    timerlist = []
 
     def __init__(self, role_S, server_S, port):
         if role_S == 'client':
@@ -88,8 +90,9 @@ class NetworkLayer:
             if sent == 0:
                 raise RuntimeError("socket connection broken")
             totalsent = totalsent + sent
-        self.bytes_sent += self.tcp + self.ethernet + self.ipv4_header + sent
-
+        pktbytes = self.tcp + self.ethernet + self.ipv4_header + totalsent 
+        self.bytes_sent += pktbytes
+        self.pktsent.append(pktbytes)
 
     ## Receive data from the network and save in internal buffer
     def collect(self):
