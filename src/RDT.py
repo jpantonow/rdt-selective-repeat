@@ -84,7 +84,7 @@ class RDT:
     seq_num = 0
     # buffer of bytes read from network
     byte_buffer = ''
-    timeout = 2
+    timeout = 5
     window_size = 0
     totalpackets = 0
     totalretransmited = 0
@@ -114,6 +114,7 @@ class RDT:
         self.byte_buffer = ''
         self.packets = []
         self.pack_ack = {}
+        self.network.buffer_S = ''
 
     def set_window_size(self, number):
         self.window_size = number
@@ -173,10 +174,10 @@ class RDT:
                     self.totallostpkts += 1
                     continue
                 
-                self.network.timerlist.append(time.time()-timer)
                 #goodput_byte = packet.seq_num_S_length + packet.length_S_length + packet.checksum_length + len(packet.msg_S) + packet.seq_num
                 goodput_byte = packet.seq_num_S_length + packet.length_S_length + len(packet.msg_S) + packet.seq_num
-
+                throughput_byte = goodput_byte + self.network.tcp + self.network.ethernet + self.network.ipv4_header + packet.checksum_length
+                
                 debug_log("SENDER: " + response)
                 msg_length = int(response[:Packet.length_S_length])
                 self.byte_buffer = response[msg_length:]
@@ -189,19 +190,25 @@ class RDT:
                             debug_log("SENDER: Receiver behind sender")
                             test = Packet(response_p.seq_num, "1")
                             self.network.udt_send(test.get_byte_S())
-                            self.goodput_bytes += goodput_byte
-                            self.goodput.append(goodput_byte)
-                            self.timerlist.append(time.time()-timer)
-                            debug_log(self.timerlist)
+                            # self.goodput_bytes += goodput_byte
+                            # self.goodput.append(goodput_byte)
+                            # self.timerlist.append(time.time()-timer)
+                            # debug_log(self.timerlist)
 
                     elif (response_p.msg_S is "1"):
                         debug_log("NEW PACKET")
                         debug_log("SENDER: ACK received")
                         
                         pack_ack[packet.seq_num] = response_p.msg_S
+                        
+                        self.network.timerlist.append(time.time()-timer)
+                        self.network.bytes_sent += throughput_byte
+                        self.network.pktsent.append(throughput_byte)
+                        
                         self.goodput_bytes += goodput_byte
                         self.goodput.append(goodput_byte)
                         self.timerlist.append(time.time()-timer)
+                        
                         #debug_log(f"bytes good old=={sys.getsizeof(packet)}")
                         #size = len(pac.seq_num) + len(pac.msg_S)
                        
@@ -248,11 +255,10 @@ class RDT:
                     self.totallostpkts += 1
                     continue
                 
-                self.network.timerlist.append(time.time()-timer)
+                # self.network.timerlist.append(time.time()-timer)
                 msg_length = int(response[:Packet.length_S_length])
                 self.byte_buffer = response[msg_length:]
                 self.totalpackets +=1
-                
                     
                 if not Packet.corrupt(response[:msg_length]):
                     response_p = Packet.from_byte_S(response[:msg_length])

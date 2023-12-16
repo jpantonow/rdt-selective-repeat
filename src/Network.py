@@ -6,6 +6,10 @@ from time import sleep
 import random
 import RDT
 
+def debug_stats(message):
+    print("\033[1;32m" + message + "\033[0m")
+
+
 
 ## Provides an abstraction for the network layer
 class NetworkLayer:
@@ -90,9 +94,10 @@ class NetworkLayer:
             if sent == 0:
                 raise RuntimeError("socket connection broken")
             totalsent = totalsent + sent
-        pktbytes = self.tcp + self.ethernet + self.ipv4_header + totalsent 
-        self.bytes_sent += pktbytes
-        self.pktsent.append(pktbytes)
+        #debug_stats(f"{totalsent}")
+        # pktbytes = self.tcp + self.ethernet + self.ipv4_header + totalsent 
+        # self.bytes_sent += pktbytes
+        # self.pktsent.append(pktbytes)
 
     ## Receive data from the network and save in internal buffer
     def collect(self):

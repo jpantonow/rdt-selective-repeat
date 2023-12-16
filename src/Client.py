@@ -96,6 +96,7 @@ if __name__ == '__main__':
         #a1.title("Throughput X Time")
         a1.set_title("Throughput X Time")
         a1.set_ylabel("Throughput [kB/s]")
+        #a1.set_yscale('log')
         a1.set_xlabel("Time [s]")
         
         a2.grid(True)
@@ -108,7 +109,9 @@ if __name__ == '__main__':
             a2.annotate('',xy=(time2,pkg), xytext= (10,-10), textcoords='offset points')
         a2.set_title("Goodput X Time")
         a2.set_ylabel("Goodput [kB/s]")
+        #a2.set_yscale('log')
         a2.set_xlabel("Time [s]")
+        
         plt.show()
         
     except (KeyboardInterrupt, SystemExit):
