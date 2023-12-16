@@ -88,7 +88,7 @@ if __name__ == '__main__':
         throughput = [(a / b)/1e3 for a, b in zip(pksent,timelist)]
         fig, (a1,a2) = plt.subplots(2,1)
         
-        plt.subplots_adjust(hspace=1)
+        plt.subplots_adjust(hspace=0.8)
         
         a1.grid(True)
         a1.scatter(timelist, throughput, c='red', edgecolors='black', linewidths=1,alpha=0.75)
@@ -113,8 +113,8 @@ if __name__ == '__main__':
         a2.set_ylabel("Goodput [kB/s]")
         #a2.set_yscale('log')
         a2.set_xlabel("Time [s]")
-        
         plt.show()
+        
         
     except (KeyboardInterrupt, SystemExit):
         print("Ending connection...")
