@@ -76,14 +76,17 @@ if __name__ == '__main__':
         debug_stats(f"Throughput = {(rdt.network.bytes_sent)/(send_time):.2f}[Bps]")
         debug_stats(f"Goodput = {(rdt.goodput_bytes)/(send_time):.2f}[Bps]")
         debug_stats(f"Total of transmited packets = {rdt.totalpackets}")
+        debug_stats(f"Total of lost packets = {rdt.totallostpkts}")
         debug_stats(f"Total of corrupted acks = {rdt.totalcorrupted_acks}")
         debug_stats(f"Total of corrupted packets = {rdt.totalcorrupted}")
         debug_stats(f"Total of retransmitted packets = {rdt.totalretransmited}")
         
         pksent = rdt.network.pktsent
-        timelist = [(a*1e3) for a in rdt.network.timerlist]
-        throughput = [(a / b)/1e3 for a, b in zip(rdt.network.pktsent,rdt.network.timerlist)]
+        #timelist = [(a) for a in rdt.network.timerlist]
+        timelist = rdt.network.timerlist
+        throughput = [(a / b)/1e3 for a, b in zip(pksent,timelist)]
         fig, (a1,a2) = plt.subplots(2,1)
+        plt.subplots_adjust(hspace=1)
         
         a1.grid(True)
         a1.scatter(timelist, throughput, c='red', edgecolors='black', linewidths=1,alpha=0.75)
@@ -92,7 +95,18 @@ if __name__ == '__main__':
             a1.annotate('',xy=(time,pktth), xytext= (10,-10), textcoords='offset points')
         #a1.title("Throughput X Time")
         a1.set_ylabel("Throughput [kB/s]")
-        a1.set_xlabel("Time [ms]")
+        a1.set_xlabel("Time [s]")
+        
+        a2.grid(True)
+        pkgoodput = rdt.goodput
+        timelist_goodput = [(a) for a in rdt.timerlist]
+        goodput = [(a/b) for a,b in zip(pkgoodput,timelist_goodput)]
+    
+        a2.scatter(timelist_goodput, pkgoodput, c='red', edgecolors='black', linewidths=1,alpha=0.75)
+        for pkg, time in zip(goodput, timelist_goodput):
+            a2.annotate('',xy=(time,pkg), xytext= (10,-10), textcoords='offset points')
+        a2.set_ylabel("Goodput [B/s]")
+        a2.set_xlabel("Time [s]")
         plt.show()
         
     except (KeyboardInterrupt, SystemExit):
