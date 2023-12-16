@@ -79,19 +79,22 @@ if __name__ == '__main__':
         debug_stats(f"Total of corrupted acks = {rdt.totalcorrupted_acks}")
         debug_stats(f"Total of corrupted packets = {rdt.totalcorrupted}")
         debug_stats(f"Total of retransmitted packets = {rdt.totalretransmited}")
+        
         pksent = rdt.network.pktsent
         timelist = [(a*1e3) for a in rdt.network.timerlist]
         throughput = [(a / b)/1e3 for a, b in zip(rdt.network.pktsent,rdt.network.timerlist)]
-        #timelist = [a * (10**8) for a in rdt.network.timerlist]
-        #throughput = [(a / b)*(10**8) for a, b in zip(rdt.network.pktsent,rdt.network.timerlist)]
-        plt.scatter(timelist, throughput)
+        fig, (a1,a2) = plt.subplots(2,1)
+        
+        a1.grid(True)
+        a1.scatter(timelist, throughput, c='red', edgecolors='black', linewidths=1,alpha=0.75)
+        #plt.plot(timelist,throughput)
         for pktth, time in zip(throughput, timelist):
-            plt.annotate('',xy=(time,pktth), xytext= (10,-10), textcoords='offset points')
-        plt.title("Throughput X Time")
-        plt.ylabel("Throughput [kB/s]")
-        plt.xlabel("Time [ms]")
+            a1.annotate('',xy=(time,pktth), xytext= (10,-10), textcoords='offset points')
+        #a1.title("Throughput X Time")
+        a1.set_ylabel("Throughput [kB/s]")
+        a1.set_xlabel("Time [ms]")
         plt.show()
-            #dar um jeito de imprimir as mensagens
+        
     except (KeyboardInterrupt, SystemExit):
         print("Ending connection...")
     except (BrokenPipeError, ConnectionAbortedError, ConnectionResetError):
