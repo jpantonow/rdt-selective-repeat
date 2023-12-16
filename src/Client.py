@@ -82,7 +82,6 @@ if __name__ == '__main__':
         debug_stats(f"Total of retransmitted packets = {rdt.totalretransmited}")
         
         pksent = rdt.network.pktsent
-        #timelist = [(a) for a in rdt.network.timerlist]
         timelist = rdt.network.timerlist
         throughput = [(a / b)/1e3 for a, b in zip(pksent,timelist)]
         fig, (a1,a2) = plt.subplots(2,1)
@@ -99,13 +98,13 @@ if __name__ == '__main__':
         
         a2.grid(True)
         pkgoodput = rdt.goodput
-        timelist_goodput = [(a) for a in rdt.timerlist]
-        goodput = [(a/b) for a,b in zip(pkgoodput,timelist_goodput)]
+        timelist_goodput = rdt.timerlist
+        goodput = [(a/b)/1e3 for a,b in zip(pkgoodput,timelist_goodput)]
     
-        a2.scatter(timelist_goodput, pkgoodput, c='red', edgecolors='black', linewidths=1,alpha=0.75)
-        for pkg, time in zip(goodput, timelist_goodput):
-            a2.annotate('',xy=(time,pkg), xytext= (10,-10), textcoords='offset points')
-        a2.set_ylabel("Goodput [B/s]")
+        a2.scatter(timelist_goodput, goodput, c='red', edgecolors='black', linewidths=1,alpha=0.75)
+        for pkg, time2 in zip(goodput, timelist_goodput):
+            a2.annotate('',xy=(time2,pkg), xytext= (10,-10), textcoords='offset points')
+        a2.set_ylabel("Goodput [kB/s]")
         a2.set_xlabel("Time [s]")
         plt.show()
         

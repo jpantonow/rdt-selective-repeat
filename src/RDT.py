@@ -174,6 +174,7 @@ class RDT:
                     continue
                 
                 self.network.timerlist.append(time.time()-timer)
+                goodput_byte = packet.seq_num_S_length + packet.length_S_length + packet.checksum_length + len(packet.msg_S) + packet.seq_num
                 
                 debug_log("SENDER: " + response)
                 msg_length = int(response[:Packet.length_S_length])
@@ -187,15 +188,15 @@ class RDT:
                             debug_log("SENDER: Receiver behind sender")
                             test = Packet(response_p.seq_num, "1")
                             self.network.udt_send(test.get_byte_S())
-                            self.goodput_bytes += sys.getsizeof(packet)
-                            self.goodput.append(sys.getsizeof(packet))
+                            self.goodput_bytes += goodput_byte
+                            self.goodput.append(goodput_byte)
                             self.timerlist.append(time.time()-timer)
                             debug_log(self.timerlist)
 
                     elif (response_p.msg_S is "1"):
                         debug_log("NEW PACKET")
                         debug_log("SENDER: ACK received")
-                        goodput_byte = packet.seq_num_S_length + packet.length_S_length + packet.checksum_length + len(packet.msg_S) + packet.seq_num
+                        
                         pack_ack[packet.seq_num] = response_p.msg_S
                         self.goodput_bytes += goodput_byte
                         self.goodput.append(goodput_byte)
