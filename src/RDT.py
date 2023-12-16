@@ -54,7 +54,7 @@ class Packet:
         checksum_S = checksum.hexdigest()
         # compile into a string
         return length_S + seq_num_S + checksum_S + self.msg_S
-
+    
     @staticmethod
     def corrupt(byte_S):
         # extract the fields
@@ -190,14 +190,21 @@ class RDT:
                             self.goodput_bytes += sys.getsizeof(packet)
                             self.goodput.append(sys.getsizeof(packet))
                             self.timerlist.append(time.time()-timer)
+                            debug_log(self.timerlist)
 
                     elif (response_p.msg_S is "1"):
                         debug_log("NEW PACKET")
                         debug_log("SENDER: ACK received")
+                        goodput_byte = packet.seq_num_S_length + packet.length_S_length + packet.checksum_length + len(packet.msg_S) + packet.seq_num
                         pack_ack[packet.seq_num] = response_p.msg_S
-                        self.goodput_bytes += sys.getsizeof(packet)
-                        self.goodput.append(sys.getsizeof(packet))
+                        self.goodput_bytes += goodput_byte
+                        self.goodput.append(goodput_byte)
                         self.timerlist.append(time.time()-timer)
+                        #debug_log(f"bytes good old=={sys.getsizeof(packet)}")
+                        #size = len(pac.seq_num) + len(pac.msg_S)
+                       
+                        #debug_log(f"bytes good new =={goodput_byte}")
+                        #debug_log(f"bytes through=={self.network.pktsent[0]}")
                         if response_p.seq_num == packets[lowest_seq].seq_num:
                             for key in packets:
                                 if key.seq_num not in pack_ack:
