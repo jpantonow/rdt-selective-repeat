@@ -85,6 +85,7 @@ if __name__ == '__main__':
         timelist = rdt.network.timerlist
         throughput = [(a / b)/1e3 for a, b in zip(pksent,timelist)]
         fig, (a1,a2) = plt.subplots(2,1)
+        
         plt.subplots_adjust(hspace=1)
         
         a1.grid(True)
@@ -93,6 +94,7 @@ if __name__ == '__main__':
         for pktth, time in zip(throughput, timelist):
             a1.annotate('',xy=(time,pktth), xytext= (10,-10), textcoords='offset points')
         #a1.title("Throughput X Time")
+        a1.set_title("Throughput X Time")
         a1.set_ylabel("Throughput [kB/s]")
         a1.set_xlabel("Time [s]")
         
@@ -104,6 +106,7 @@ if __name__ == '__main__':
         a2.scatter(timelist_goodput, goodput, c='red', edgecolors='black', linewidths=1,alpha=0.75)
         for pkg, time2 in zip(goodput, timelist_goodput):
             a2.annotate('',xy=(time2,pkg), xytext= (10,-10), textcoords='offset points')
+        a2.set_title("Goodput X Time")
         a2.set_ylabel("Goodput [kB/s]")
         a2.set_xlabel("Time [s]")
         plt.show()
