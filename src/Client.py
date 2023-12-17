@@ -66,6 +66,13 @@ if __name__ == '__main__':
             if msg_seq not in in_order:
                 in_order[msg_seq] = msg_S
 
+        avg_pkts = sum(rdt.network.pktsent)/len(rdt.network.pktsent)
+        avg_time = sum(rdt.network.timerlist)/len(rdt.network.timerlist)
+        avg_throughput = avg_pkts/avg_time
+        
+        avg_gpkt = sum(rdt.goodput)/len(rdt.goodput)
+        avg_gtime = sum(rdt.timerlist)/len(rdt.timerlist)
+        avg_goodput = avg_gpkt/avg_gtime
         
         #msg_convertidas = [in_order[key] for key in sorted(in_order.keys())]
         msg_convertidas = rdt.reorder(in_order)
@@ -75,8 +82,13 @@ if __name__ == '__main__':
         debug_stats(f"Simulation time = {(time.time()-begin):.2f}[s]")
         # debug_stats(f"Throughput = {(rdt.network.bytes_sent)/(send_time):.2f}[Bps]")
         # debug_stats(f"Goodput = {(rdt.goodput_bytes)/(send_time):.2f}[Bps]")
-        debug_stats(f"Throughput = {(rdt.network.bytes_sent)/(rdt.send_time):.2f}[Bps]")
-        debug_stats(f"Goodput = {(rdt.goodput_bytes)/(rdt.send_time):.2f}[Bps]")
+        # debug_stats(f"Throughput = {(rdt.network.bytes_sent)/(rdt.send_time):.2f}[Bps]")
+        # debug_stats(f"Goodput = {(rdt.goodput_bytes)/(rdt.send_time):.2f}[Bps]")
+        
+        debug_stats(f"Throughput = {avg_throughput:.2f}[Bps]")
+        debug_stats(f"Goodput = {avg_goodput:.2f}[Bps]")
+        
+        
         debug_stats(f"Total of transmited packets = {rdt.totalpackets}")
         debug_stats(f"Total of lost packets = {rdt.totallostpkts}")
         debug_stats(f"Total of corrupted acks = {rdt.totalcorrupted_acks}")
