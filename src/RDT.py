@@ -233,11 +233,13 @@ class RDT:
                     elif response_p.msg_S is "0":
                         #debug_log("SENDER: NAK received")
                         self.byte_buffer = ''
+                        self.totallostpkts += 1
 
                     else:
                         #debug_log("SENDER: Corrupted ACK")
                         self.byte_buffer = ''
                         self.totalcorrupted_acks += 1
+                        self.totalcorrupted += 1
                 
                     self.network.buffer_S = ''
                     self.byte_buffer = ''
@@ -284,10 +286,13 @@ class RDT:
                     elif response_p.msg_S is "0":
                         #debug_log("SENDER: NAK received")
                         self.byte_buffer = ''
+                        self.totallostpkts += 1
 
                     else:
                     #debug_log("SENDER: Corrupted ACK")
                         self.byte_buffer = ''
+                        self.totalcorrupted_acks += 1
+                        self.totalcorrupted += 1
             
                     self.network.buffer_S = ''
                     self.byte_buffer = ''
