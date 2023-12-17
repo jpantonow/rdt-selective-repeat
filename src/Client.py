@@ -112,6 +112,9 @@ if __name__ == '__main__':
         
         
         debug_stats(f"Total of transmited packets = {rdt.totalpackets}")
+        debug_stats(f"Total of data packets = {rdt.totaldata}")
+        debug_stats(f"Total of ack packets = {rdt.totalacks}")
+        debug_stats(f"Total of end char needed = {rdt.endchar}")
         debug_stats(f"Total of lost packets = {rdt.totallostpkts}")
         debug_stats(f"Total of corrupted acks = {rdt.totalcorrupted_acks}")
         debug_stats(f"Total of corrupted packets = {rdt.totalcorrupted}")

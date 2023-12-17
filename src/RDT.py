@@ -87,6 +87,9 @@ class RDT:
     timeout = 5
     window_size = 0
     totalpackets = 0
+    totalacks = 0
+    totaldata = 0
+    endchar = 0
     totalretransmited = 0
     totalcorrupted = 0
     totalcorrupted_acks = 0
@@ -204,6 +207,8 @@ class RDT:
                         
                         pack_ack[packet.seq_num] = response_p.msg_S
                         
+                        self.totalacks += 1
+                        self.totaldata += 1
                         self.network.timerlist.append(send_time)
                         self.network.bytes_sent += throughput_byte
                         self.network.pktsent.append(throughput_byte)
@@ -266,6 +271,7 @@ class RDT:
                 msg_length = int(response[:Packet.length_S_length])
                 self.byte_buffer = response[msg_length:]
                 self.totalpackets +=1
+                self.endchar += 1
                     
                 if not Packet.corrupt(response[:msg_length]):
                     response_p = Packet.from_byte_S(response[:msg_length])
