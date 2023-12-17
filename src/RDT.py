@@ -84,7 +84,7 @@ class RDT:
     seq_num = 0
     # buffer of bytes read from network
     byte_buffer = ''
-    timeout = 5
+    timeout = 10
     window_size = 0
     totalpackets = 0
     totalacks = 0
@@ -219,11 +219,6 @@ class RDT:
                         
                         self.send_time += send_time
                         
-                        #debug_log(f"bytes good old=={sys.getsizeof(packet)}")
-                        #size = len(pac.seq_num) + len(pac.msg_S)
-                       
-                        #debug_log(f"bytes good new =={goodput_byte}")
-                        #debug_log(f"bytes through=={self.network.pktsent[0]}")
                         if response_p.seq_num == packets[lowest_seq].seq_num:
                             for key in packets:
                                 if key.seq_num not in pack_ack:
