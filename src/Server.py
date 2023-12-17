@@ -1,6 +1,11 @@
 import argparse
 import RDT
 import time
+import matplotlib.pyplot as plt
+
+def debug_stats(message):
+    print("\033[1;32m" + message + "\033[0m")
+
 
 def upperCase(message):
     capitalizedSentence = message.upper()
@@ -16,6 +21,7 @@ if __name__ == '__main__':
     send_in_order = {}
     rdt = RDT.RDT('server', None, args.port)
     try:
+        begin = time.time()
         while True:
             # try to receiver message before timeout
             time_of_last_data = time.time()
@@ -43,6 +49,63 @@ if __name__ == '__main__':
         #print(send_in_order)
         rdt.clear()
         rdt.rdt_4_0_send(server_rcv)
+        
+        avg_pkts = sum(rdt.network.pktsent)/len(rdt.network.pktsent)
+        avg_time = sum(rdt.network.timerlist)/len(rdt.network.timerlist)
+        avg_throughput = avg_pkts/avg_time
+        
+        avg_gpkt = sum(rdt.goodput)/len(rdt.goodput)
+        avg_gtime = sum(rdt.timerlist)/len(rdt.timerlist)
+        avg_goodput = avg_gpkt/avg_gtime
+        
+       
+        debug_stats(f"Simulation time = {(time.time()-begin):.2f}[s]")
+        # debug_stats(f"Throughput = {(rdt.network.bytes_sent)/(send_time):.2f}[Bps]")
+        # debug_stats(f"Goodput = {(rdt.goodput_bytes)/(send_time):.2f}[Bps]")
+        # debug_stats(f"Throughput = {(rdt.network.bytes_sent)/(rdt.send_time):.2f}[Bps]")
+        # debug_stats(f"Goodput = {(rdt.goodput_bytes)/(rdt.send_time):.2f}[Bps]")
+        
+        debug_stats(f"Throughput = {avg_throughput:.2f}[Bps]")
+        debug_stats(f"Goodput = {avg_goodput:.2f}[Bps]")
+        
+        
+        debug_stats(f"Total of transmited packets = {rdt.totalpackets}")
+        debug_stats(f"Total of lost packets = {rdt.totallostpkts}")
+        debug_stats(f"Total of corrupted acks = {rdt.totalcorrupted_acks}")
+        debug_stats(f"Total of corrupted packets = {rdt.totalcorrupted}")
+        debug_stats(f"Total of retransmitted packets = {rdt.totalretransmited}")
+        
+        pksent = rdt.network.pktsent
+        timelist = rdt.network.timerlist
+        throughput = [(a / b)/1e3 for a, b in zip(pksent,timelist)]
+        fig, (a1,a2) = plt.subplots(2,1)
+        
+        plt.subplots_adjust(hspace=0.8)
+        
+        a1.grid(True)
+        a1.scatter(timelist, throughput, c='red', edgecolors='black', linewidths=1,alpha=0.75)
+        #plt.plot(timelist,throughput)
+        for pktth, time in zip(throughput, timelist):
+            a1.annotate('',xy=(time,pktth), xytext= (10,-10), textcoords='offset points')
+        #a1.title("Throughput X Time")
+        a1.set_title("Throughput X Time - Server")
+        a1.set_ylabel("Throughput [kB/s]")
+        #a1.set_yscale('log')
+        a1.set_xlabel("Time [s]")
+        
+        a2.grid(True)
+        pkgoodput = rdt.goodput
+        timelist_goodput = rdt.timerlist
+        goodput = [(a/b)/1e3 for a,b in zip(pkgoodput,timelist_goodput)]
+    
+        a2.scatter(timelist_goodput, goodput, c='red', edgecolors='black', linewidths=1,alpha=0.75)
+        for pkg, time2 in zip(goodput, timelist_goodput):
+            a2.annotate('',xy=(time2,pkg), xytext= (10,-10), textcoords='offset points')
+        a2.set_title("Goodput X Time - Server")
+        a2.set_ylabel("Goodput [kB/s]")
+        #a2.set_yscale('log')
+        a2.set_xlabel("Time [s]")
+        plt.show()
 
 
                 

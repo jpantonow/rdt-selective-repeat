@@ -50,11 +50,29 @@ if __name__ == '__main__':
         send_time = time_of_last_data -  begin 
         # try to receive message before timeout
         print("Client: receiving messages")
-        while(len(msg_L) != len(in_order)):
+        # while(len(msg_L) != len(in_order)):
+        #     msg_S = None
+        #     msg_seq = None
+        #     while msg_S == None:
+        #         (msg_seq,msg_S) = rdt.rdt_4_0_receive()
+        #         if msg_S is None:
+        #             if time_of_last_data + timeout < time.time():
+        #                 break
+        #             else:
+        #                 continue
+        #     time_of_last_data = time.time()
+
+        #     # print the result
+        #     if msg_seq not in in_order:
+        #         in_order[msg_seq] = msg_S
+        
+        while((len(msg_L)+1) != len(in_order)):
             msg_S = None
             msg_seq = None
             while msg_S == None:
                 (msg_seq,msg_S) = rdt.rdt_4_0_receive()
+                if (msg_S=="\0"):
+                    break
                 if msg_S is None:
                     if time_of_last_data + timeout < time.time():
                         break
@@ -63,8 +81,12 @@ if __name__ == '__main__':
             time_of_last_data = time.time()
 
             # print the result
+            if(msg_S == "\0"):
+                break
+            
             if msg_seq not in in_order:
                 in_order[msg_seq] = msg_S
+
 
         avg_pkts = sum(rdt.network.pktsent)/len(rdt.network.pktsent)
         avg_time = sum(rdt.network.timerlist)/len(rdt.network.timerlist)
@@ -108,7 +130,7 @@ if __name__ == '__main__':
         for pktth, time in zip(throughput, timelist):
             a1.annotate('',xy=(time,pktth), xytext= (10,-10), textcoords='offset points')
         #a1.title("Throughput X Time")
-        a1.set_title("Throughput X Time")
+        a1.set_title("Throughput X Time - Client")
         a1.set_ylabel("Throughput [kB/s]")
         #a1.set_yscale('log')
         a1.set_xlabel("Time [s]")
@@ -121,7 +143,7 @@ if __name__ == '__main__':
         a2.scatter(timelist_goodput, goodput, c='red', edgecolors='black', linewidths=1,alpha=0.75)
         for pkg, time2 in zip(goodput, timelist_goodput):
             a2.annotate('',xy=(time2,pkg), xytext= (10,-10), textcoords='offset points')
-        a2.set_title("Goodput X Time")
+        a2.set_title("Goodput X Time - Client")
         a2.set_ylabel("Goodput [kB/s]")
         #a2.set_yscale('log')
         a2.set_xlabel("Time [s]")
