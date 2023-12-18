@@ -151,8 +151,9 @@ class RDT:
             packets.append(Packet(self.seq_num, msg_S))
             self.seq_num += 1
 
-        self.window_size = round(len(packets)/2)
-
+        #self.window_size = round(len(packets)/2)
+        self.window_size = 5
+        
         lowest_seq = 0
         transmited = []
         while(len(pack_ack)!=len(packets)):
@@ -275,6 +276,7 @@ class RDT:
                 # self.network.timerlist.append(time.time()-timer)
                 msg_length = int(response[:Packet.length_S_length])
                 self.byte_buffer = response[msg_length:]
+                
                 self.totalpackets +=1
                 self.endchar += 1
                     
