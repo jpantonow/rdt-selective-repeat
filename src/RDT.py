@@ -84,7 +84,7 @@ class RDT:
     seq_num = 0
     # buffer of bytes read from network
     byte_buffer = ''
-    timeout = 1
+    timeout = 2
     window_size = 0
     totalpackets = 0
     totalacks = 0
