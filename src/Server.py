@@ -48,15 +48,20 @@ if __name__ == '__main__':
         #print(lista)
         #print(send_in_order)
         rdt.clear()
+        begin = time.time()
         rdt.rdt_4_0_send(server_rcv)
+        send_time = time.time() - begin
         
-        avg_pkts = sum(rdt.network.pktsent)/len(rdt.network.pktsent)
-        avg_time = sum(rdt.network.timerlist)/len(rdt.network.timerlist)
-        avg_throughput = avg_pkts/avg_time
+        pkts = sum(rdt.network.pktsent)
+        #avg_time = sum(rdt.network.timerlist)/len(rdt.network.timerlist)
+        #avg_throughput = avg_pkts/avg_time
         
-        avg_gpkt = sum(rdt.goodput)/len(rdt.goodput)
-        avg_gtime = sum(rdt.timerlist)/len(rdt.timerlist)
-        avg_goodput = avg_gpkt/avg_gtime
+        avg_throughput = pkts/send_time
+        
+        #avg_gpkt = sum(rdt.goodput)/len(rdt.goodput)
+        gpkts = sum(rdt.goodput)
+        #avg_gtime = sum(rdt.timerlist)/len(rdt.timerlist)
+        avg_goodput = gpkts/send_time
         
        
         debug_stats(f"Simulation time = {(time.time()-begin):.2f}[s]")

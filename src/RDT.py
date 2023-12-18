@@ -160,9 +160,14 @@ class RDT:
             for packet in packets[lowest_seq : lowest_seq + self.window_size]:
                 if(packet.seq_num in pack_ack):
                     continue
+                
+                goodput_byte = packet.seq_num_S_length + packet.length_S_length + len(packet.msg_S) + packet.seq_num
+                throughput_byte = goodput_byte + self.network.tcp + self.network.ethernet + self.network.ipv4_header + packet.checksum_length
+                
+                
                 debug_log(f"SENDER: TRANSMITING PACKET -> {packet.msg_S}")
                 debug_log(f"PACK_ACK == {pack_ack}")
-
+                        
                 if(packet.seq_num in transmited):
                     self.totalretransmited += 1
                 else:
@@ -174,17 +179,17 @@ class RDT:
 
                 while response == '' and (timer + self.timeout > time.time()):
                     response = self.network.udt_receive()
-                    
-                if response == '':
-                    self.totallostpkts += 1
-                    continue
                 
                 send_time = time.time() -  timer 
                 
-                #goodput_byte = packet.seq_num_S_length + packet.length_S_length + packet.checksum_length + len(packet.msg_S) + packet.seq_num
-                goodput_byte = packet.seq_num_S_length + packet.length_S_length + len(packet.msg_S) + packet.seq_num
-                throughput_byte = goodput_byte + self.network.tcp + self.network.ethernet + self.network.ipv4_header + packet.checksum_length
+                self.network.timerlist.append(send_time)
+                #self.network.bytes_sent += throughput_byte
+                self.network.pktsent.append(throughput_byte)
                 
+                if response == '':
+                    self.totallostpkts += 1
+                    continue
+                                
                 debug_log("SENDER: " + response)
                 msg_length = int(response[:Packet.length_S_length])
                 self.byte_buffer = response[msg_length:]
@@ -213,10 +218,6 @@ class RDT:
                         
                         self.totalacks += 1
                         self.totaldata += 1
-                        
-                        self.network.timerlist.append(send_time)
-                        self.network.bytes_sent += throughput_byte
-                        self.network.pktsent.append(throughput_byte)
                         
                         self.goodput_bytes += goodput_byte
                         self.goodput.append(goodput_byte)
