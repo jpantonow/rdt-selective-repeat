@@ -84,7 +84,7 @@ class RDT:
     seq_num = 0
     # buffer of bytes read from network
     byte_buffer = ''
-    timeout = 10
+    timeout = 6
     window_size = 0
     totalpackets = 0
     totalacks = 0
@@ -204,7 +204,7 @@ class RDT:
                     elif (response_p.msg_S is "1"):
                         debug_log("NEW PACKET")
                         debug_log("SENDER: ACK received")
-                        
+                        debug_log("ACK DOS PKTS")
                         pack_ack[packet.seq_num] = response_p.msg_S
                         
                         self.totalacks += 1
@@ -244,7 +244,7 @@ class RDT:
                     self.totalcorrupted += 1
                     
         self.byte_buffer = ''
-        self.network.buffer_S = ''
+        #self.network.buffer_S = ''
         
         while True:
                 packet = Packet(999999999,"\0")
@@ -259,6 +259,8 @@ class RDT:
 
                 while response == '' and (timer + self.timeout > time.time()):
                     response = self.network.udt_receive()
+
+                
                     
                 if response == '':
                     self.totallostpkts += 1
@@ -277,6 +279,7 @@ class RDT:
 
                     if (response_p.msg_S is "1"):
                         debug_log("SENDER: ACK RECEIVED")
+                        debug_log("ACK DO END CHAR")
                         self.send_time += send_time
                         break
 
@@ -332,7 +335,7 @@ class RDT:
                 # Check packet
                 if p.is_ack_pack():
                     self.byte_buffer = self.byte_buffer[length:]
-                    continue
+                    break
                 if p.seq_num in pack_ack:
                     #debug_log(
                     #   'RECEIVER: Already received packet. ACK(n) again.')
