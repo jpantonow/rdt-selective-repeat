@@ -84,7 +84,7 @@ class RDT:
     seq_num = 0
     # buffer of bytes read from network
     byte_buffer = ''
-    timeout = 6
+    timeout = 2
     window_size = 0
     totalpackets = 0
     totalacks = 0
@@ -191,17 +191,19 @@ class RDT:
                                
                 if not Packet.corrupt(response[:msg_length]):
                     response_p = Packet.from_byte_S(response[:msg_length])
-                    if packet.seq_num in pack_ack:
-                        if (pack_ack[packet.seq_num] == "1"):
+                    #response_ack = int(response_p.msg_S)
+                    
+                    if response_p.seq_num in pack_ack:
+                        if (pack_ack[packet.seq_num] == f"{response_p.msg_S}"):
                             debug_log("SENDER: Receiver behind sender")
-                            test = Packet(response_p.seq_num, "1")
+                            test = Packet(response_p.seq_num, f"{packet.seq_num}")
                             self.network.udt_send(test.get_byte_S())
                             # self.goodput_bytes += goodput_byte
                             # self.goodput.append(goodput_byte)
                             # self.timerlist.append(time.time()-timer)
                             # debug_log(self.timerlist)
 
-                    elif (response_p.msg_S is "1"):
+                    if (response_p.msg_S == f"{packet.seq_num}"):
                         debug_log("NEW PACKET")
                         debug_log("SENDER: ACK received")
                        
@@ -209,6 +211,7 @@ class RDT:
                         
                         self.totalacks += 1
                         self.totaldata += 1
+                        
                         self.network.timerlist.append(send_time)
                         self.network.bytes_sent += throughput_byte
                         self.network.pktsent.append(throughput_byte)
@@ -225,10 +228,11 @@ class RDT:
                                     lowest_seq = key.seq_num
                                     break
 
-                    elif response_p.msg_S is "0":
-                        debug_log("SENDER: NAK received")
+                    elif response_p.msg_S is "N":
+                        debug_log("SENDER: PACKET CORRUPTED")
                         self.byte_buffer = ''
-                        self.totallostpkts += 1
+                        self.totalcorrupted += 1
+                        #self.totallostpkts += 1
 
                     else:
                         debug_log("SENDER: Corrupted ACK")
@@ -240,8 +244,9 @@ class RDT:
                     #self.network.buffer_S = ''
                     self.byte_buffer = ''
                 else:
-                    debug_log("SENDER: CORRUPT PACKET")
-                    self.totalcorrupted += 1
+                    debug_log("SENDER: CORRUPT ACK")
+                    #self.totalcorrupted += 1
+                    self.totalcorrupted_acks += 1
                     
         self.byte_buffer = ''
         #self.network.buffer_S = ''
@@ -276,27 +281,29 @@ class RDT:
                     
                 if not Packet.corrupt(response[:msg_length]):
                     response_p = Packet.from_byte_S(response[:msg_length])
-
-                    if (response_p.msg_S is "1"):
+                    #response_ack = int(response_p.msg_S)
+                    
+                    if (response_p.msg_S == f"{packet.seq_num}"):
                         debug_log("SENDER: ACK RECEIVED")
                         self.send_time += send_time
                         break
 
-                    elif response_p.msg_S is "0":
-                        #debug_log("SENDER: NAK received")
+                    elif response_p.msg_S is "N":
+                        debug_log("SENDER: PACKET CORRUPTED")
                         self.byte_buffer = ''
                         self.totallostpkts += 1
 
                     else:
-                    #debug_log("SENDER: Corrupted ACK")
+                        debug_log("SENDER: Corrupted ACK")
                         self.byte_buffer = ''
                         self.totalcorrupted_acks += 1
-                        self.totalcorrupted += 1
+                        #self.totalcorrupted += 1
             
                     #self.network.buffer_S = ''
                     self.byte_buffer = ''
                 else:
-                    self.totalcorrupted += 1
+                    debug_log("SENDER: Corrupted ACK")
+                    self.totalcorrupted_acks += 1
                     
         self.pack_ack = pack_ack
         self.packets = packets
@@ -326,7 +333,7 @@ class RDT:
                 debug_log("RECEIVER: Corrupt packet")
                 if(Packet.corrupt(self.byte_buffer[0:length])):
                     break
-                answer = Packet(Packet.from_byte_S(self.byte_buffer[0:length]).seq_num, "0")
+                answer = Packet(Packet.from_byte_S(self.byte_buffer[0:length]).seq_num, "N")
                 self.network.udt_send(answer.get_byte_S())
             else:
                 # create packet from buffer content
@@ -338,7 +345,7 @@ class RDT:
                 if p.seq_num in pack_ack:
                     debug_log(
                       'RECEIVER: Already received packet. ACK(n) again.')
-                    answer = Packet(p.seq_num, "1")
+                    answer = Packet(p.seq_num, f"{p.seq_num}")
                     self.network.udt_send(answer.get_byte_S())
                     break
 
@@ -346,7 +353,7 @@ class RDT:
                     debug_log(
                         'RECEIVER: Received new.  Send ACK(n).')
                     # SEND ACK
-                    answer = Packet(p.seq_num, "1")
+                    answer = Packet(p.seq_num, f"{p.seq_num}")
                     self.network.udt_send(answer.get_byte_S())
                     pack_ack[p.seq_num] = "1"
                 # Add contents to return string
