@@ -84,7 +84,7 @@ class RDT:
     seq_num = 0
     # buffer of bytes read from network
     byte_buffer = ''
-    timeout = 3
+    timeout = 2
     window_size = 0
     totalpackets = 0
     totalacks = 0
@@ -191,6 +191,7 @@ class RDT:
                                
                 if not Packet.corrupt(response[:msg_length]):
                     response_p = Packet.from_byte_S(response[:msg_length])
+                    debug_log(response_p.msg_S)
                     #response_ack = int(response_p.msg_S)
                     
                     if response_p.seq_num in pack_ack:
@@ -228,7 +229,7 @@ class RDT:
                                     lowest_seq = key.seq_num
                                     break
 
-                    elif response_p.msg_S is "N":
+                    elif (response_p.msg_S == "N"):
                         debug_log("SENDER: PACKET CORRUPTED")
                         self.byte_buffer = ''
                         self.totalcorrupted += 1
@@ -239,7 +240,7 @@ class RDT:
                         debug_log(f"{response_p.msg_S}")
                         self.byte_buffer = ''
                         self.totalcorrupted_acks += 1
-                        self.totalcorrupted += 1
+                        #self.totalcorrupted += 1
                 
                     #self.network.buffer_S = ''
                     self.byte_buffer = ''
@@ -265,8 +266,6 @@ class RDT:
                 while response == '' and (timer + self.timeout > time.time()):
                     response = self.network.udt_receive()
 
-                
-                    
                 if response == '':
                     self.totallostpkts += 1
                     continue
@@ -288,7 +287,7 @@ class RDT:
                         self.send_time += send_time
                         break
 
-                    elif response_p.msg_S is "N":
+                    elif (response_p.msg_S == "N"):
                         debug_log("SENDER: PACKET CORRUPTED")
                         self.byte_buffer = ''
                         #self.totallostpkts += 1
