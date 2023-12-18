@@ -118,7 +118,7 @@ class RDT:
         self.byte_buffer = ''
         self.packets = []
         self.pack_ack = {}
-        self.network.buffer_S = ''
+        #self.network.buffer_S = ''
 
     def set_window_size(self, number):
         self.window_size = number
@@ -226,12 +226,13 @@ class RDT:
                                     break
 
                     elif response_p.msg_S is "0":
-                        #debug_log("SENDER: NAK received")
+                        debug_log("SENDER: NAK received")
                         self.byte_buffer = ''
                         self.totallostpkts += 1
 
                     else:
-                        #debug_log("SENDER: Corrupted ACK")
+                        debug_log("SENDER: Corrupted ACK")
+                        debug_log(f"{response_p.msg_S}")
                         self.byte_buffer = ''
                         self.totalcorrupted_acks += 1
                         self.totalcorrupted += 1
@@ -239,6 +240,7 @@ class RDT:
                     self.network.buffer_S = ''
                     self.byte_buffer = ''
                 else:
+                    debug_log("SENDER: CORRUPT PACKET")
                     self.totalcorrupted += 1
                     
         self.byte_buffer = ''
