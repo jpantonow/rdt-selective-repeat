@@ -51,7 +51,7 @@ if __name__ == '__main__':
         # try to receive message before timeout
         print("Client: receiving messages")
         
-        while((len(msg_L)+1) != len(in_order)):
+        while True:
             msg_S = None
             msg_seq = None
             while msg_S == None:

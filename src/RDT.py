@@ -213,7 +213,8 @@ class RDT:
                     if (response_p.msg_S == f"{packet.seq_num}"):
                         debug_log("NEW PACKET")
                         debug_log("SENDER: ACK received")
-                       
+                        debug_log(len(pack_ack))
+                        debug_log(len(packets))
                         pack_ack[packet.seq_num] = response_p.msg_S
                         
                         self.totalacks += 1
@@ -251,7 +252,9 @@ class RDT:
                     #self.totalcorrupted += 1
                     self.totalcorrupted_acks += 1
                     
-        self.byte_buffer = ''
+            self.byte_buffer = ''
+    
+
         #self.network.buffer_S = ''
         
         while True:
@@ -291,9 +294,6 @@ class RDT:
                     #debug_log("SENDER: Corrupted ACK")
                     #self.totalcorrupted_acks += 1
                     continue
-                    
-        self.pack_ack = pack_ack
-        self.packets = packets
         
     def rdt_4_0_receive(self):
         # ver a parada dos buffers no rdt_4_0_receive
@@ -332,11 +332,11 @@ class RDT:
                     #break
                     
                 # Check packet
-                if p.is_ack_pack():
+                elif p.is_ack_pack():
                     self.byte_buffer = self.byte_buffer[length:]
                     break
                 
-                if p.seq_num in pack_ack:
+                elif p.seq_num in pack_ack:
                     
                     debug_log(
                       'RECEIVER: Already received packet. ACK(n) again.')
