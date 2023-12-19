@@ -285,22 +285,13 @@ class RDT:
                     response_p = Packet.from_byte_S(response[:msg_length])
                     #response_ack = int(response_p.msg_S)
                     
-                    if (response_p.msg_S == f"{packet.seq_num}"):
+                    if (response_p.msg_S == "\0"):
                         #debug_log("SENDER: ACK RECEIVED")
                         self.send_time += send_time
                         break
 
-                    elif (response_p.msg_S == "N"):
-                        #debug_log("SENDER: PACKET CORRUPTED")
-                        self.byte_buffer = ''
-                        #self.totallostpkts += 1
-                        #self.totalcorrupted += 1
-
                     else:
-                        #debug_log("SENDER: Corrupted ACK")
                         self.byte_buffer = ''
-                        #self.totalcorrupted_acks += 1
-                        #self.totalcorrupted += 1
             
                     #self.network.buffer_S = ''
                     self.byte_buffer = ''
@@ -341,10 +332,18 @@ class RDT:
             else:
                 # create packet from buffer content
                 p = Packet.from_byte_S(self.byte_buffer[0:length])
+                
+                if (p.msg_S == "\0"):
+                    debug_log("RECEIVER: END OF TRANSMISSION")
+                    answer = Packet(p.seq_num, "\0")
+                    self.network.udt_send(answer.get_byte_S())
+                    #break
+                    
                 # Check packet
                 if p.is_ack_pack():
                     self.byte_buffer = self.byte_buffer[length:]
                     break
+                
                 if p.seq_num in pack_ack:
                     
                     debug_log(
@@ -354,7 +353,7 @@ class RDT:
                     
                     answer = Packet(p.seq_num, f"{p.seq_num}")
                     self.network.udt_send(answer.get_byte_S())
-                    break
+                    #break
 
                 else:
                     debug_log(

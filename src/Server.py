@@ -31,10 +31,12 @@ if __name__ == '__main__':
                     break
                 else:
                     continue
+            time_of_last_data = time.time()
+            
             if(msg_L=="\0"):
                 print("\nServer: received special message to stop converting")
                 break
-            time_of_last_data = time.time()
+            
             # convert and reply
             if(seq_L not in send_in_order):
                 rep_msg_L = upperCase(msg_L)
