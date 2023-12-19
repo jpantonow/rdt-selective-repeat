@@ -203,8 +203,8 @@ class RDT:
                     #response_ack = int(response_p.msg_S)
                     
                     if response_p.seq_num in pack_ack:
-                        if (pack_ack[packet.seq_num] == f"{response_p.msg_S}"):
-                            debug_log("SENDER: Receiver behind sender")
+                        if (pack_ack[response_p.seq_num] == f"{response_p.msg_S}"):
+                            debug_log("SENDER: Receiver behind sender, probably reordered")
                             test = Packet(response_p.seq_num, f"{packet.seq_num}")
                             self.network.udt_send(test.get_byte_S())
                             self.goodput_bytes += goodput_byte
@@ -347,10 +347,10 @@ class RDT:
                     self.network.udt_send(answer.get_byte_S())
                     #break
                     
-                # Check packet
-                elif p.is_ack_pack():
-                    self.byte_buffer = self.byte_buffer[length:]
-                    break
+                # # Check packet
+                # elif p.is_ack_pack():
+                #     self.byte_buffer = self.byte_buffer[length:]
+                #     break
                 
                 elif p.seq_num in pack_ack:
                     
