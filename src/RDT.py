@@ -84,7 +84,7 @@ class RDT:
     seq_num = 0
     # buffer of bytes read from network
     byte_buffer = ''
-    timeout = 1
+    timeout = 2
     window_size = 0
     totalpackets = 0
     totalacks = 0
@@ -259,22 +259,14 @@ class RDT:
                 self.network.udt_send(packet.get_byte_S())    
                 response = ''
                 timer = time.time()
-                
-                # if(packet.seq_num in transmited):
-                #     self.totalretransmited += 1
-                # else:
-                #     transmited.append(packet.seq_num)
 
                 while response == '' and (timer + self.timeout > time.time()):
                     response = self.network.udt_receive()
 
                 if response == '':
-                    #self.totallostpkts += 1
                     continue
                 
                 send_time = time.time() -  timer
-                
-                # self.network.timerlist.append(time.time()-timer)
                 msg_length = int(response[:Packet.length_S_length])
                 self.byte_buffer = response[msg_length:]
                 

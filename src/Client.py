@@ -56,8 +56,6 @@ if __name__ == '__main__':
             msg_seq = None
             while msg_S == None:
                 (msg_seq,msg_S) = rdt.rdt_4_0_receive()
-                if (msg_S=="\0"):
-                    break
                 if msg_S is None:
                     if time_of_last_data + timeout < time.time():
                         break
