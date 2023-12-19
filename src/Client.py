@@ -51,13 +51,11 @@ if __name__ == '__main__':
         # try to receive message before timeout
         print("Client: receiving messages")
         
-        while((len(msg_L)+1) != len(in_order)):
+        while True:
             msg_S = None
             msg_seq = None
             while msg_S == None:
                 (msg_seq,msg_S) = rdt.rdt_4_0_receive()
-                if (msg_S=="\0"):
-                    break
                 if msg_S is None:
                     if time_of_last_data + timeout < time.time():
                         break
