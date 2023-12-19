@@ -186,11 +186,16 @@ class RDT:
                 self.network.timerlist.append(send_time)
                 #self.network.bytes_sent += throughput_byte
                 self.network.pktsent.append(throughput_byte)
-                
+                    
                 if response == '':
                     debug_log("SENDER: Packet Lost")
                     self.totallostpkts += 1
                     continue
+                
+                # if response == 'N':
+                #     debug_log("SENDER: Corrupt Packet on Receiver")
+                #     self.totalcorrupted += 1
+                #     continue
                                 
                 debug_log("SENDER: " + response)
                 msg_length = int(response[:Packet.length_S_length])
@@ -203,8 +208,8 @@ class RDT:
                     #response_ack = int(response_p.msg_S)
                     
                     if response_p.seq_num in pack_ack:
-                        if (pack_ack[packet.seq_num] == f"{response_p.msg_S}"):
-                            debug_log("SENDER: Receiver behind sender")
+                        if (pack_ack[response_p.seq_num] == f"{response_p.msg_S}"):
+                            debug_log("SENDER: Receiver behind sender, probably reordered")
                             test = Packet(response_p.seq_num, f"{packet.seq_num}")
                             self.network.udt_send(test.get_byte_S())
                             self.goodput_bytes += goodput_byte
@@ -329,12 +334,16 @@ class RDT:
                 break  # not enough bytes to read the whole packet
             # Check if packet is corrupt
             if Packet.corrupt(self.byte_buffer):
-                # Send a NAK
-                debug_log("RECEIVER: Corrupt packet")
                 if(Packet.corrupt(self.byte_buffer[0:length])):
+                    # Send a NAK
+                    debug_log("RECEIVER: Corrupt packet")
+                    answer = Packet(0, "N")
+                    self.network.udt_send(answer.get_byte_S())
                     break
+                debug_log("RECEIVER: Corrupt packet")
                 answer = Packet(Packet.from_byte_S(self.byte_buffer[0:length]).seq_num, "N")
                 self.network.udt_send(answer.get_byte_S())
+                
             else:
                 # create packet from buffer content
                 p = Packet.from_byte_S(self.byte_buffer[0:length])
@@ -345,10 +354,10 @@ class RDT:
                     self.network.udt_send(answer.get_byte_S())
                     #break
                     
-                # Check packet
-                elif p.is_ack_pack():
-                    self.byte_buffer = self.byte_buffer[length:]
-                    break
+                # # Check packet
+                # elif p.is_ack_pack():
+                #     self.byte_buffer = self.byte_buffer[length:]
+                #     break
                 
                 elif p.seq_num in pack_ack:
                     
@@ -377,6 +386,7 @@ class RDT:
                 # if this was the last packet, will return on the next iteration
                 # if(p.msg_S in pack_ack):
                 #     break
+                
             # remove the packet bytes from the buffer
             self.byte_buffer = self.byte_buffer[length:]
             # if this was the last packet, will return on the next iteration
