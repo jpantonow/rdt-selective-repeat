@@ -84,7 +84,7 @@ class RDT:
     seq_num = 0
     # buffer of bytes read from network
     byte_buffer = ''
-    timeout = 0.3
+    timeout = 0.5
     window_size = 0
     totalpackets = 0
     totalacks = 0
@@ -265,8 +265,8 @@ class RDT:
                 self.totalpackets +=1
                 self.endchar += 1
                 
-                goodput_byte = packet.seq_num_S_length + packet.length_S_length + len(packet.msg_S) + packet.seq_num
-                throughput_byte = goodput_byte + self.network.tcp + self.network.ethernet + self.network.ipv4_header + packet.checksum_length
+                # goodput_byte = packet.seq_num_S_length + packet.length_S_length + len(packet.msg_S) + packet.seq_num
+                # throughput_byte = goodput_byte + self.network.tcp + self.network.ethernet + self.network.ipv4_header + packet.checksum_length
                 
                 debug_log(f"SENDER: TRANSMITING PACKET - END CHAR -> {packet.msg_S}")
                 
@@ -277,9 +277,9 @@ class RDT:
                 
                 send_time = time.time() - timer
                 
-                self.network.timerlist.append(send_time)
-                #self.network.bytes_sent += throughput_byte
-                self.network.pktsent.append(throughput_byte)
+                # self.network.timerlist.append(send_time)
+                # #self.network.bytes_sent += throughput_byte
+                # self.network.pktsent.append(throughput_byte)
 
                 if response == '':
                     debug_log("SENDER: 'End Char' Packet Lost")
