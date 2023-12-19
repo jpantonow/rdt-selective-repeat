@@ -84,7 +84,7 @@ class RDT:
     seq_num = 0
     # buffer of bytes read from network
     byte_buffer = ''
-    timeout = 2
+    timeout = 1
     window_size = 0
     totalpackets = 0
     totalacks = 0
@@ -213,10 +213,9 @@ class RDT:
                     if (response_p.msg_S == f"{packet.seq_num}"):
                         debug_log("NEW PACKET")
                         debug_log("SENDER: ACK received")
-                        debug_log(len(pack_ack))
-                        debug_log(len(packets))
-                        pack_ack[packet.seq_num] = response_p.msg_S
                         
+                        pack_ack[packet.seq_num] = response_p.msg_S
+                      
                         self.totalacks += 1
                         self.totaldata += 1
                         
@@ -254,7 +253,6 @@ class RDT:
                     
             self.byte_buffer = ''
     
-
         #self.network.buffer_S = ''
         
         while True:
@@ -267,6 +265,7 @@ class RDT:
                     response = self.network.udt_receive()
 
                 if response == '':
+                    debug_log("End char lost")
                     continue
                 
                 send_time = time.time() -  timer

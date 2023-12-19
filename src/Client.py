@@ -65,6 +65,12 @@ if __name__ == '__main__':
 
             # print the result
             if(msg_S == "\0"):
+                print("\nClient: received special message to stop receiving")
+                timer = time.time()
+                while (timer+1 > time.time()):
+                    (seq_L,msg_L) = rdt.rdt_4_0_receive()
+                    if msg_L is None:
+                        continue
                 break
             
             if msg_seq not in in_order:

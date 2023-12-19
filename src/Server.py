@@ -35,6 +35,11 @@ if __name__ == '__main__':
             
             if(msg_L=="\0"):
                 print("\nServer: received special message to stop converting")
+                timer = time.time()
+                while (timer+1 > time.time()):
+                    (seq_L,msg_L) = rdt.rdt_4_0_receive()
+                    if msg_L is None:
+                        continue
                 break
             
             # convert and reply
