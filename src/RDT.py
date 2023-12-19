@@ -329,12 +329,14 @@ class RDT:
                 break  # not enough bytes to read the whole packet
             # Check if packet is corrupt
             if Packet.corrupt(self.byte_buffer):
-                # Send a NAK
-                debug_log("RECEIVER: Corrupt packet")
                 if(Packet.corrupt(self.byte_buffer[0:length])):
+                    # Send a NAK
+                    debug_log("RECEIVER: Corrupt packet")
                     break
+                debug_log("RECEIVER: Corrupt packet")
                 answer = Packet(Packet.from_byte_S(self.byte_buffer[0:length]).seq_num, "N")
                 self.network.udt_send(answer.get_byte_S())
+                
             else:
                 # create packet from buffer content
                 p = Packet.from_byte_S(self.byte_buffer[0:length])
@@ -377,6 +379,7 @@ class RDT:
                 # if this was the last packet, will return on the next iteration
                 # if(p.msg_S in pack_ack):
                 #     break
+                
             # remove the packet bytes from the buffer
             self.byte_buffer = self.byte_buffer[length:]
             # if this was the last packet, will return on the next iteration
