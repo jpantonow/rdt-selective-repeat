@@ -93,6 +93,7 @@ class RDT:
     totalretransmited = 0
     totalcorrupted = 0
     totalcorrupted_acks = 0
+    totalreordered = 0
     totallostpkts = 0
     lost_end_char = 0
     goodput_bytes = 0
@@ -191,11 +192,6 @@ class RDT:
                     debug_log("SENDER: Packet Lost")
                     self.totallostpkts += 1
                     continue
-                
-                # if response == 'N':
-                #     debug_log("SENDER: Corrupt Packet on Receiver")
-                #     self.totalcorrupted += 1
-                #     continue
                                 
                 debug_log("SENDER: " + response)
                 msg_length = int(response[:Packet.length_S_length])
@@ -207,16 +203,22 @@ class RDT:
                     debug_log(response_p.msg_S)
                     #response_ack = int(response_p.msg_S)
                     
-                    if response_p.seq_num in pack_ack:
+                    if (response_p.msg_S == "N"):
+                        debug_log("SENDER: PACKET CORRUPTED")
+                        self.byte_buffer = ''
+                        self.totalcorrupted += 1                    
+                    
+                    elif response_p.seq_num in pack_ack:
                         if (pack_ack[response_p.seq_num] == f"{response_p.msg_S}"):
                             debug_log("SENDER: Receiver behind sender, probably reordered")
+                            self.totalreordered += 1
                             test = Packet(response_p.seq_num, f"{packet.seq_num}")
                             self.network.udt_send(test.get_byte_S())
                             self.goodput_bytes += goodput_byte
                             self.goodput.append(goodput_byte)
                             self.timerlist.append(send_time)
 
-                    if (response_p.msg_S == f"{packet.seq_num}"):
+                    elif (response_p.msg_S == f"{packet.seq_num}"):
                         debug_log("NEW PACKET")
                         debug_log("SENDER: ACK received")
                         
@@ -237,18 +239,13 @@ class RDT:
                                     lowest_seq = key.seq_num
                                     break
 
-                    elif (response_p.msg_S == "N"):
-                        debug_log("SENDER: PACKET CORRUPTED")
-                        self.byte_buffer = ''
-                        self.totalcorrupted += 1
-                        #self.totallostpkts += 1
 
-                    else:
-                        debug_log("SENDER: Corrupted ACK")
-                        debug_log(f"{response_p.msg_S}")
-                        self.byte_buffer = ''
-                        self.totalcorrupted_acks += 1
-                        #self.totalcorrupted += 1
+                    # else:
+                    #     debug_log("SENDER: Corrupted ACK")
+                    #     debug_log(f"{response_p.msg_S}")
+                    #     self.byte_buffer = ''
+                    #     self.totalcorrupted_acks += 1
+                    #     #self.totalcorrupted += 1
                 
                     #self.network.buffer_S = ''
                     self.byte_buffer = ''

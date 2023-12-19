@@ -102,6 +102,7 @@ if __name__ == '__main__':
         debug_stats(f"Total of lost packets (data + ack) = {rdt.totallostpkts}")
         debug_stats(f"Total of corrupted acks = {rdt.totalcorrupted_acks}")
         debug_stats(f"Total of corrupted packets = {rdt.totalcorrupted}")
+        debug_stats(f"Total of reordered packets = {rdt.totalreordered}")
         debug_stats(f"Total of retransmitted packets = {rdt.totalretransmited}")
         
         pksent = rdt.network.pktsent
