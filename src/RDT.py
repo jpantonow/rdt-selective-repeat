@@ -215,10 +215,7 @@ class RDT:
                         debug_log("SENDER: ACK received")
                         
                         pack_ack[packet.seq_num] = response_p.msg_S
-                        
-                        debug_log(f"len_pack_ack == {len(pack_ack)}")
-                        debug_log(f"len_packets =={len(packets)}")
-                        
+                      
                         self.totalacks += 1
                         self.totaldata += 1
                         
