@@ -239,7 +239,14 @@ class RDT:
                                     lowest_seq = key.seq_num
                                     break
 
-
+                    else:
+                        debug_log("SENDER: Receiver behind sender, probably reordered")
+                        self.totalreordered += 1
+                        test = Packet(response_p.seq_num, f"{packet.seq_num}")
+                        self.network.udt_send(test.get_byte_S())
+                        self.goodput_bytes += goodput_byte
+                        self.goodput.append(goodput_byte)
+                        self.timerlist.append(send_time)
                     # else:
                     #     debug_log("SENDER: Corrupted ACK")
                     #     debug_log(f"{response_p.msg_S}")
