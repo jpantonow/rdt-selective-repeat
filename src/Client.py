@@ -100,7 +100,7 @@ if __name__ == '__main__':
         debug_stats(f"Throughput = {avg_throughput:.2f}[Bps]")
         debug_stats(f"Goodput = {avg_goodput:.2f}[Bps]")
         
-        
+        debug_stats(f"Total of packets in the wire (ack+data+end) = {rdt.totalpackets+rdt.totalacks}")
         debug_stats(f"Total of transmited packets = {rdt.totalpackets}")
         debug_stats(f"Total of data packets = {rdt.totaldata}")
         debug_stats(f"Total of ack packets = {rdt.totalacks}")
