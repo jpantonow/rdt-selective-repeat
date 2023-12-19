@@ -84,7 +84,7 @@ class RDT:
     seq_num = 0
     # buffer of bytes read from network
     byte_buffer = ''
-    timeout = 1
+    timeout = 0.5
     window_size = 0
     totalpackets = 0
     totalacks = 0
@@ -94,6 +94,7 @@ class RDT:
     totalcorrupted = 0
     totalcorrupted_acks = 0
     totallostpkts = 0
+    lost_end_char = 0
     goodput_bytes = 0
     goodput = []
     sizeof_goodput = 0
@@ -187,6 +188,7 @@ class RDT:
                 self.network.pktsent.append(throughput_byte)
                 
                 if response == '':
+                    debug_log("SENDER: Packet Lost")
                     self.totallostpkts += 1
                     continue
                                 
@@ -259,28 +261,41 @@ class RDT:
                 packet = Packet(999999999,"\0")
                 self.network.udt_send(packet.get_byte_S())    
                 response = ''
-                timer = time.time()
-
-                while response == '' and (timer + self.timeout > time.time()):
-                    response = self.network.udt_receive()
-
-                if response == '':
-                    debug_log("End char lost")
-                    continue
-                
-                send_time = time.time() -  timer
-                msg_length = int(response[:Packet.length_S_length])
-                self.byte_buffer = response[msg_length:]
                 
                 self.totalpackets +=1
                 self.endchar += 1
+                
+                # goodput_byte = packet.seq_num_S_length + packet.length_S_length + len(packet.msg_S) + packet.seq_num
+                # throughput_byte = goodput_byte + self.network.tcp + self.network.ethernet + self.network.ipv4_header + packet.checksum_length
+                
+                debug_log(f"SENDER: TRANSMITING PACKET - END CHAR -> {packet.msg_S}")
+                
+                timer = time.time()
+                
+                while response == '' and (timer + self.timeout > time.time()):
+                    response = self.network.udt_receive()
+                
+                send_time = time.time() - timer
+                
+                # self.network.timerlist.append(send_time)
+                # #self.network.bytes_sent += throughput_byte
+                # self.network.pktsent.append(throughput_byte)
+
+                if response == '':
+                    debug_log("SENDER: 'End Char' Packet Lost")
+                    self.totallostpkts += 1
+                    continue
+                
+                msg_length = int(response[:Packet.length_S_length])
+                self.byte_buffer = response[msg_length:]
+                
                     
                 if not Packet.corrupt(response[:msg_length]):
                     response_p = Packet.from_byte_S(response[:msg_length])
                     #response_ack = int(response_p.msg_S)
                     
                     if (response_p.msg_S == "\0"):
-                        #debug_log("SENDER: ACK RECEIVED")
+                        debug_log("SENDER: ACK RECEIVED")
                         self.send_time += send_time
                         break
 
@@ -290,6 +305,7 @@ class RDT:
                     #self.network.buffer_S = ''
                     self.byte_buffer = ''
                 else:
+                    #self.totalcorrupted += 1
                     #debug_log("SENDER: Corrupted ACK")
                     #self.totalcorrupted_acks += 1
                     continue
