@@ -186,11 +186,16 @@ class RDT:
                 self.network.timerlist.append(send_time)
                 #self.network.bytes_sent += throughput_byte
                 self.network.pktsent.append(throughput_byte)
-                
+                    
                 if response == '':
                     debug_log("SENDER: Packet Lost")
                     self.totallostpkts += 1
                     continue
+                
+                # if response == 'N':
+                #     debug_log("SENDER: Corrupt Packet on Receiver")
+                #     self.totalcorrupted += 1
+                #     continue
                                 
                 debug_log("SENDER: " + response)
                 msg_length = int(response[:Packet.length_S_length])
@@ -332,6 +337,8 @@ class RDT:
                 if(Packet.corrupt(self.byte_buffer[0:length])):
                     # Send a NAK
                     debug_log("RECEIVER: Corrupt packet")
+                    answer = Packet(0, "N")
+                    self.network.udt_send(answer.get_byte_S())
                     break
                 debug_log("RECEIVER: Corrupt packet")
                 answer = Packet(Packet.from_byte_S(self.byte_buffer[0:length]).seq_num, "N")
