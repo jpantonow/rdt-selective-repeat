@@ -70,20 +70,14 @@ if __name__ == '__main__':
         
        
         debug_stats(f"Simulation time = {(time.time()-begin):.2f}[s]")
-        # debug_stats(f"Throughput = {(rdt.network.bytes_sent)/(send_time):.2f}[Bps]")
-        # debug_stats(f"Goodput = {(rdt.goodput_bytes)/(send_time):.2f}[Bps]")
-        # debug_stats(f"Throughput = {(rdt.network.bytes_sent)/(rdt.send_time):.2f}[Bps]")
-        # debug_stats(f"Goodput = {(rdt.goodput_bytes)/(rdt.send_time):.2f}[Bps]")
-        
         debug_stats(f"Throughput = {avg_throughput:.2f}[Bps]")
         debug_stats(f"Goodput = {avg_goodput:.2f}[Bps]")
-        
-        
+        debug_stats(f"Total of packets in the wire (ack+data+end) = {rdt.totalpackets+rdt.totalacks}")
         debug_stats(f"Total of transmited packets = {rdt.totalpackets}")
         debug_stats(f"Total of data packets = {rdt.totaldata}")
         debug_stats(f"Total of ack packets = {rdt.totalacks}")
         debug_stats(f"Total of end char needed = {rdt.endchar}")
-        debug_stats(f"Total of lost packets = {rdt.totallostpkts}")
+        debug_stats(f"Total of lost packets (data + ack) = {rdt.totallostpkts}")
         debug_stats(f"Total of corrupted acks = {rdt.totalcorrupted_acks}")
         debug_stats(f"Total of corrupted packets = {rdt.totalcorrupted}")
         debug_stats(f"Total of retransmitted packets = {rdt.totalretransmited}")
