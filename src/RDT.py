@@ -372,6 +372,7 @@ class RDT:
                     answer = Packet(p.seq_num, f"{p.seq_num}")
                     self.network.udt_send(answer.get_byte_S())
                     pack_ack[p.seq_num] = p.seq_num
+                    #imprime os pacotes ja recebidos
                     debug_log(f"{pack_ack}")
                 
                 # Add contents to return string
