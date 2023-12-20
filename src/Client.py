@@ -43,7 +43,6 @@ if __name__ == '__main__':
         #Printa todas as mensagens que vao ser enviadas para o servidor
         for message in msg_L:
             print('Client asking to change case: ' + message)
-        
         # try to receive message before timeout
         rdt.rdt_4_0_send(msg_L)
         rdt.clear() #limpa as variaveis e afins do rdt

@@ -254,6 +254,7 @@ class RDT:
                         self.timerlist.append(send_time)
 
                     self.byte_buffer = ''
+                    
                 else:
                     #ack corrompido
                     debug_log("SENDER: CORRUPT ACK")
@@ -270,9 +271,6 @@ class RDT:
                 self.totalpackets +=1
                 self.endchar += 1
                 
-                # goodput_byte = packet.seq_num_S_length + packet.length_S_length + len(packet.msg_S) + packet.seq_num
-                # throughput_byte = goodput_byte + self.network.tcp + self.network.ethernet + self.network.ipv4_header + packet.checksum_length
-                
                 debug_log(f"SENDER: TRANSMITING PACKET - END CHAR -> {packet.msg_S}")
                 
                 timer = time.time()
@@ -281,10 +279,6 @@ class RDT:
                     response = self.network.udt_receive()
                 
                 send_time = time.time() - timer
-                
-                # self.network.timerlist.append(send_time)
-                # #self.network.bytes_sent += throughput_byte
-                # self.network.pktsent.append(throughput_byte)
 
                 if response == '':
                     debug_log("SENDER: 'End Char' Packet Lost")
@@ -297,7 +291,6 @@ class RDT:
                     
                 if not Packet.corrupt(response[:msg_length]):
                     response_p = Packet.from_byte_S(response[:msg_length])
-                    #response_ack = int(response_p.msg_S)
                     
                     if (response_p.msg_S == "\0"):
                         debug_log("SENDER: ACK RECEIVED")
@@ -305,14 +298,12 @@ class RDT:
                         break
 
                     else:
+                        self.totalcorrupted += 1
                         self.byte_buffer = ''
-            
-                    #self.network.buffer_S = ''
+                        
                     self.byte_buffer = ''
                 else:
-                    #self.totalcorrupted += 1
-                    #debug_log("SENDER: Corrupted ACK")
-                    #self.totalcorrupted_acks += 1
+                    self.totalcorrupted_acks += 1
                     continue
         
     def rdt_4_0_receive(self):
@@ -372,6 +363,7 @@ class RDT:
                     answer = Packet(p.seq_num, f"{p.seq_num}")
                     self.network.udt_send(answer.get_byte_S())
                     pack_ack[p.seq_num] = p.seq_num
+                    #imprime os pacotes ja recebidos
                     debug_log(f"{pack_ack}")
                 
                 # Add contents to return string
