@@ -31,6 +31,7 @@ if __name__ == '__main__':
     msg_L_aux = msg_L[:]
     totmsgbytes = 0
     
+    #Aumentar numero de mensagens de acordo com o argumento de linha - total de msgs = n*5 + 5
     for _ in range(args.num_msg):
         msg_L.extend(msg_L_aux)
 
@@ -39,12 +40,13 @@ if __name__ == '__main__':
     in_order = {}
     try:
         begin = time.time()
+        #Printa todas as mensagens que vao ser enviadas para o servidor
         for message in msg_L:
             print('Client asking to change case: ' + message)
         
         # try to receive message before timeout
         rdt.rdt_4_0_send(msg_L)
-        rdt.clear()
+        rdt.clear() #limpa as variaveis e afins do rdt
         
         time_of_last_data = time.time()
         send_time = time_of_last_data -  begin 
@@ -55,7 +57,7 @@ if __name__ == '__main__':
             msg_S = None
             msg_seq = None
             while msg_S == None:
-                (msg_seq,msg_S) = rdt.rdt_4_0_receive()
+                (msg_seq,msg_S) = rdt.rdt_4_0_receive() #recebimento mensagem por mensagem
                 if msg_S is None:
                     if time_of_last_data + timeout < time.time():
                         break
@@ -63,34 +65,34 @@ if __name__ == '__main__':
                         continue
             time_of_last_data = time.time()
 
-            # print the result
+            # caso de receber o caractere especial para parar o recebimento de strings
+            # crucial para o servidor parar de enviar e para o cliente saber quantas mensagens ha no total
             if(msg_S == "\0"):
                 print("\nClient: received special message to stop receiving")
-                timer = time.time()
+                timer = time.time() #tempo extra para garantir que o ack sera corretamente enviado para o servidor
                 while (timer+2 > time.time()):
                     (seq_L,msg_L) = rdt.rdt_4_0_receive()
                 break
             
-            if msg_seq not in in_order:
+            if msg_seq not in in_order: #adiciona as mensagens recebidas fora de ordem
                 in_order[msg_seq] = msg_S
 
 
-        pkts = sum(rdt.network.pktsent)
-        #avg_time = sum(rdt.network.timerlist)/len(rdt.network.timerlist)
-        #avg_throughput = avg_pkts/avg_time
+        pkts = sum(rdt.network.pktsent) #soma de todos os bytes dos pacotes enviados
+    
+        avg_throughput = pkts/send_time #average throughput
         
-        avg_throughput = pkts/send_time
+        gpkts = sum(rdt.goodput) #soma de todos os bytes de dados dos pacotes enviados
+
+        avg_goodput = gpkts/send_time #average goodput
         
-        #avg_gpkt = sum(rdt.goodput)/len(rdt.goodput)
-        gpkts = sum(rdt.goodput)
-        #avg_gtime = sum(rdt.timerlist)/len(rdt.timerlist)
-        avg_goodput = gpkts/send_time
+        msg_convertidas = rdt.reorder(in_order) #reordenacao no sistema final das mensagens recebidas
         
-        #msg_convertidas = [in_order[key] for key in sorted(in_order.keys())]
-        msg_convertidas = rdt.reorder(in_order)
         #print(msg_convertidas)          
         for msg_S in msg_convertidas:
             print('\nClient: Received the converted frase to: ' + msg_S + '\n')
+            
+        #overview das estatisticas
         debug_stats(f"Simulation time = {(time.time()-begin):.2f}[s]")
         debug_stats(f"Throughput = {avg_throughput:.2f}[Bps]")
         debug_stats(f"Goodput = {avg_goodput:.2f}[Bps]")
@@ -105,6 +107,7 @@ if __name__ == '__main__':
         debug_stats(f"Total of reordered packets = {rdt.totalreordered}")
         debug_stats(f"Total of retransmitted packets = {rdt.totalretransmited}")
         
+        #graficos do throughput por pacote enviado
         pksent = rdt.network.pktsent
         timelist = rdt.network.timerlist
         throughput = [(a / b)/1e3 for a, b in zip(pksent,timelist)]
@@ -114,15 +117,13 @@ if __name__ == '__main__':
         
         a1.grid(True)
         a1.scatter(timelist, throughput, c='red', edgecolors='black', linewidths=1,alpha=0.75)
-        #plt.plot(timelist,throughput)
         for pktth, time in zip(throughput, timelist):
             a1.annotate('',xy=(time,pktth), xytext= (10,-10), textcoords='offset points')
-        #a1.title("Throughput X Time")
         a1.set_title("Throughput X Time - Client")
         a1.set_ylabel("Throughput [kB/s]")
-        #a1.set_yscale('log')
         a1.set_xlabel("Time [s]")
         
+        #graficos do goodput por pacote enviado
         a2.grid(True)
         pkgoodput = rdt.goodput
         timelist_goodput = rdt.timerlist

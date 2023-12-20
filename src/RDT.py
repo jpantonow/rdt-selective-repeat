@@ -104,8 +104,6 @@ class RDT:
     
     def __init__(self, role_S, server_S, port):
         self.network = Network.NetworkLayer(role_S, server_S, port)
-        self.packets = []
-        self.pack_ack = {}
 
     def check_buffer(self, buffer):
         for i in range(0, len(buffer)-1):
@@ -118,8 +116,6 @@ class RDT:
         self.window_size = 0
         self.seq_num = 0
         self.byte_buffer = ''
-        self.packets = []
-        self.pack_ack = {}
         #self.network.buffer_S = ''
 
     def set_window_size(self, number):
@@ -129,15 +125,9 @@ class RDT:
         for i in range(0, self.window_size-1):
             packet[i] = packet[i+1]
 
-    def add_packets(self, Packet: Packet):
-        self.packets.append(Packet)
-
     def send_packets(self, Packets):
         for i in range(0, len(Packets)-1):
             self.network.udt_send(Packets[i].get_byte_S())
-
-    def remove_packets(self, Packet: Packet):
-        self.packets.remove(Packet)
 
     def reorder(self,dict_data):
         return [dict_data[key] for key in sorted(dict_data.keys())]
@@ -153,7 +143,6 @@ class RDT:
             packets.append(Packet(self.seq_num, msg_S))
             self.seq_num += 1
 
-        #self.window_size = round(len(packets)/2)
         self.window_size = 5
         
         lowest_seq = 0
@@ -322,7 +311,7 @@ class RDT:
         # ver a parada dos buffers no rdt_4_0_receive
         self.byte_buffer = ''
         #pack_ack = {}
-        pack_ack = self.pack_ack
+        pack_ack = {}
         ret_S = None
         ret_seq = None
         byte_S = self.network.udt_receive()
